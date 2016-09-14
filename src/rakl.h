@@ -7,8 +7,9 @@
 #include <Eigen/Dense>
 
 using Eigen::Matrix;
-using Eigen::Vector7d;
+using Eigen::Array;
 using Eigen::MatrixXd;
+using Eigen::Matrix4d;
 
 
 /*!
@@ -30,7 +31,6 @@ namespace RA //!< Robot Arm Property
      *  @brief  A struct variable for Tool Center Point (TCP)
      *  ARM_POS storages the ouput of forward kinematic
      */
-    typedef Matrix<Vector7d, 4,4> Matrix744d;
     typedef struct ARM_POS
     {
         /*! Position of TCP (mm) */
@@ -44,7 +44,7 @@ namespace RA //!< Robot Arm Property
         /*! 2D Array of Homogeneous Transformation Matrix for 6 axes
          *  and work_base coordination system
          */
-        Matrix744d T;
+        Array< Matrix4d, 7, 1> T;
     };
 
     /*! @struct ARM_AXIS_VALUE  rakl.h
