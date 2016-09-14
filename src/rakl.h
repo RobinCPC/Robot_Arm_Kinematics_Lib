@@ -11,6 +11,7 @@ using Eigen::Array;
 using Eigen::MatrixXd;
 using Eigen::Matrix4d;
 
+typedef Array<double, 6, 1> Array6d;
 
 /*!
  * @enum IK_RESULT
@@ -74,3 +75,38 @@ namespace RA //!< Robot Arm Property
 
 }
 
+// Class of kinematics of 6-axis robot arm
+/*! @class rakl     rakl.h
+ *  @brief A kinematics class
+ *  rakl implement the kinematics of 6-axis (articulated) robot arm
+ */
+class rakl
+{
+public:
+    rakl();         //!< Default Constructor
+    rakl(
+        Array6d a0,                     //!< Link length of all links (mm)
+        Array6d alpha0,                 //!< Twist angle of all links (degree)
+        Array6d d0,                     //!< Link offset of all links (mm)
+        Array6d ini_theta,              //!< Initial value of all joint angles
+        Array<double, 12, 1> axis_limit //!< Upper and lower limit fo all joints
+        );
+    ~rakl();        //!< Destructor
+
+protected:
+    /*! Input data of modified D-H parameter for robot arm */
+    Array6d a;                          //!< Link length (mm)
+    Array6d alpha;                      //!< Link twist angle (degree)
+    Array6d d;                          //!< Link offset (mm)
+    Array6d theta;                      //!< Joint angle (degree)
+    Array<double, 12, 1> axis_limit;    //!< Upper and lower limit of all joints
+    Matrix4d work_base_T;               //!< Homogeneous transformation matrix of work base
+    Matrix4d work_base;                 //!< Position & Orientation of TCP in work_base coordination
+
+private:
+    Array6d m_ini_theta;            //!< Storage initialize 6 joint angle
+    Array6d m_pre_theta;            //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
+    RA::ARM_POS m_pos_act;          //!< position & orient ation (x,y,z,a,b,c) of TCP, elbow angle, and HT matrix of each joint & work base
+    Matrix4d m_T_act;               //!< HT matrix of TCP wrt work base
+    Matrix4d m_tool_T;              //!< HT matrix of TCP wrt  joint 6th (last joint coordination)
+};
