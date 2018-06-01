@@ -46,7 +46,7 @@ namespace RA //!< Robot Arm Property
          *  and work_base coordination system
          */
         Array< Matrix4d, 7, 1> T;
-    };
+    }ARM_POS;
 
     /*! @struct ARM_AXIS_VALUE  rakl.h
      *  @brief  A struct variable for joints of robot arm
@@ -55,7 +55,7 @@ namespace RA //!< Robot Arm Property
     typedef struct ARM_AXIS_VALUE
     {
         /*! Joints Angle of 8 solutions*/
-        MatrixXd axis_value(8,6);
+        MatrixXd axis_value;
         /*! use following method to find the fittest folution */
         int fit;                    //!< the number of the fittest solutiions.
         bool solution_check[8];     //!< check if having solution.
@@ -71,7 +71,7 @@ namespace RA //!< Robot Arm Property
                 solution_check[i] = singular_check[i] = limit_check[i] = 0;
             }
         }
-    };
+    }ARM_AXIS_VALUE;
 
 }
 
@@ -89,9 +89,13 @@ public:
         Array6d alpha0,                 //!< Twist angle of all links (degree)
         Array6d d0,                     //!< Link offset of all links (mm)
         Array6d ini_theta,              //!< Initial value of all joint angles
-        Array<double, 12, 1> axis_limit //!< Upper and lower limit fo all joints
+        Array6d uplimit0,               //!< Upper limit fo all joints
+        Array6d lowlimit0               //!< Lower limit fo all joints
         );
     ~rakl();        //!< Destructor
+    RA::ARM_POS forwardKin(Array6d q);
+    RA::ARM_POS getArmPos(void);
+
 
 protected:
     /*! Input data of modified D-H parameter for robot arm */
@@ -99,14 +103,20 @@ protected:
     Array6d alpha;                      //!< Link twist angle (degree)
     Array6d d;                          //!< Link offset (mm)
     Array6d theta;                      //!< Joint angle (degree)
-    Array<double, 12, 1> axis_limit;    //!< Upper and lower limit of all joints
+    Array6d uplimit;                    //!< Upper  limit of all joints
+    Array6d lowlimit;                   //!< Lower limit of all joints
     Matrix4d work_base_T;               //!< Homogeneous transformation matrix of work base
     Matrix4d work_base;                 //!< Position & Orientation of TCP in work_base coordination
 
 private:
     Array6d m_ini_theta;            //!< Storage initialize 6 joint angle
     Array6d m_pre_theta;            //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
-    RA::ARM_POS m_pos_act;          //!< position & orient ation (x,y,z,a,b,c) of TCP, elbow angle, and HT matrix of each joint & work base
     Matrix4d m_T_act;               //!< HT matrix of TCP wrt work base
     Matrix4d m_tool_T;              //!< HT matrix of TCP wrt  joint 6th (last joint coordination)
+    RA::ARM_POS m_pos_act;          //!< position & orient ation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
+    int pre_fit_solution;           //!< The index of configuration of previous IK
+
+    // private functions
+    Matrix4d Homo_trans(double& A, double& alpha, double& D, double& theta);
+    void tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& yaw_x);
 };
