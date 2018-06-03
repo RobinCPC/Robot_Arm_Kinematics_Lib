@@ -22,7 +22,7 @@ rakl::rakl()
 
     pre_fit_solution = 9;
 
-    // Defult as KUKA KR5 (Modified DH-Table)
+    // Default as KUKA KR5 ( Using Modified DH-Table)
     //    <<     j1,    j2,    j3,     j4,    j5,   j6
         a <<    0.0,  75.0, 270.0,   90.0,   0.0,   0.0;
     alpha <<  180.0,  90.0,   0.0,   90.0, -90.0, -90.0;
@@ -61,7 +61,7 @@ rakl::rakl()
     m_T_act = T16 * m_tool_T;           // m_T_act is Tool center point HT Matrix
     work_base = m_T_act * work_base_T;  // get TCP in work base coordination
 
-    /* calcualte xyzabc */
+    /* calculate xyzabc */
     m_pos_act.x = work_base(0,3);
     m_pos_act.y = work_base(1,3);
     m_pos_act.z = work_base(2,3);
@@ -135,7 +135,7 @@ rakl::rakl(
     m_T_act = T16 * m_tool_T;           // m_T_act is Tool center point HT Matrix
     work_base = m_T_act * work_base_T;  // get TCP in work base coordination
 
-    /* calcualte xyzabc */
+    /* calculate xyzabc */
     m_pos_act.x = work_base(0,3);
     m_pos_act.y = work_base(1,3);
     m_pos_act.z = work_base(2,3);
@@ -163,7 +163,7 @@ RA::ARM_POS rakl::forwardKin(Array6d q)
     // storage input angles as previous angles for finding best solution in IK
     m_pre_theta = q;
 
-    // calculate homogenous matrix for each joint
+    // calculate homogeneous matrix for each joint
     Eigen::Array<Matrix4d, 6, 1> T;
     for(int i=0; i < q.size(); ++i)
         T[i] = Homo_trans(a[i], alpha[i], d[i], q[i]);
@@ -177,7 +177,7 @@ RA::ARM_POS rakl::forwardKin(Array6d q)
     m_T_act = T16 * m_tool_T;           // m_T_act is Tool center point HT Matrix
     work_base = m_T_act * work_base_T;  // get TCP in work base coordination
 
-    /* calcualte xyzabc */
+    /* calculate xyzabc */
     m_pos_act.x = work_base(0, 3);
     m_pos_act.y = work_base(1, 3);
     m_pos_act.z = work_base(2, 3);
@@ -207,7 +207,7 @@ RA::ARM_POS rakl::getArmPos(void)
 
 /********************************************************************************/
 /** \brief Building HT matrix
-* A function to build homogenous transformation matrix for each link.
+* A function to build homogeneous transformation matrix for each link.
 * \return Matrix4d
 */
 Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, double& theta)
@@ -228,7 +228,7 @@ Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, double& theta)
 
 
 /********************************************************************************/
-/** \brief Rotatation Matrix to Roll Pitch Yaw
+/** \brief Rotation Matrix to Roll Pitch Yaw
 * A function to get roll, pitch, yaw from rotation matrix
 * \return N/A
 */

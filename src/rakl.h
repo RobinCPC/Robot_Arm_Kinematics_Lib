@@ -30,7 +30,7 @@ namespace RA //!< Robot Arm Property
 {
     /*! @struct AMR_POS     rakl.h
      *  @brief  A struct variable for Tool Center Point (TCP)
-     *  ARM_POS storages the ouput of forward kinematic
+     *  ARM_POS storages the output of forward kinematic
      */
     typedef struct ARM_POS
     {
@@ -56,8 +56,8 @@ namespace RA //!< Robot Arm Property
     {
         /*! Joints Angle of 8 solutions*/
         MatrixXd axis_value;
-        /*! use following method to find the fittest folution */
-        int fit;                    //!< the number of the fittest solutiions.
+        /*! Use following method to find the fittest solution */
+        int fit;                    //!< the index of the fittest solution.
         bool solution_check[8];     //!< check if having solution.
         bool singular_check[8];     //!< check if in singular point.
         bool limit_check[8];        //!< check if over angle limit.
@@ -89,8 +89,8 @@ public:
         Array6d alpha0,                 //!< Twist angle of all links (degree)
         Array6d d0,                     //!< Link offset of all links (mm)
         Array6d ini_theta,              //!< Initial value of all joint angles
-        Array6d uplimit0,               //!< Upper limit fo all joints
-        Array6d lowlimit0               //!< Lower limit fo all joints
+        Array6d uplimit0,               //!< Upper limit of all joints
+        Array6d lowlimit0               //!< Lower limit of all joints
         );
     ~rakl();        //!< Destructor
     RA::ARM_POS forwardKin(Array6d q);
@@ -111,9 +111,9 @@ protected:
 private:
     Array6d m_ini_theta;            //!< Storage initialize 6 joint angle
     Array6d m_pre_theta;            //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
-    Matrix4d m_T_act;               //!< HT matrix of TCP wrt work base
-    Matrix4d m_tool_T;              //!< HT matrix of TCP wrt  joint 6th (last joint coordination)
-    RA::ARM_POS m_pos_act;          //!< position & orient ation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
+    Matrix4d m_T_act;               //!< HT matrix of TCP with respected to work base
+    Matrix4d m_tool_T;              //!< HT matrix of TCP with respected to 6th joint (last joint coordination)
+    RA::ARM_POS m_pos_act;          //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
     int pre_fit_solution;           //!< The index of configuration of previous IK
 
     // private functions
