@@ -205,6 +205,76 @@ RA::ARM_POS rakl::getArmPos(void)
     return this->m_pos_act;
 }
 
+
+bool rakl::setToolOffset(RA::ARM_POS tool_offset)
+{
+    double roll = D2R * tool_offset.a;
+    double pitch = D2R * tool_offset.b;
+    double yaw = D2R * tool_offset.c;
+
+    // compute rpy matrix and assign it to offset matrix of the tool.
+    rpy2tr(roll, pitch, yaw, this->m_tool_T);
+    this->m_tool_T(0,3) = tool_offset.x;
+    this->m_tool_T(1,3) = tool_offset.x;
+    this->m_tool_T(2,3) = tool_offset.x;
+
+    return true;
+}
+
+void rakl::setBase(Matrix4d& base)
+{
+    this->work_base_T = base;
+    return;
+}
+
+Matrix4d rakl::getBase(void)
+{
+    return this->work_base_T;
+}
+
+Array6d rakl::getA(void)
+{
+    return this->a;
+}
+
+Array6d rakl::getAlpha(void)
+{
+    return this->alpha;
+}
+
+Array6d rakl::getD(void)
+{
+    return this->d;
+}
+
+Array6d rakl::getTheta(void)
+{
+    return this->theta;
+}
+
+void rakl::setUpLimit(Array6d& up_lim)
+{
+   this->uplimit = up_lim;
+   return;
+}
+
+Array6d rakl::getUpLimit(void)
+{
+    return this->uplimit;
+}
+
+void rakl::setLowLimit(Array6d& low_lim)
+{
+   this->lowlimit = low_lim;
+   return;
+}
+
+Array6d rakl::getLowLimit(void)
+{
+    return this->lowlimit;
+}
+
+
 /********************************************************************************/
 /** \brief Building HT matrix
 * A function to build homogeneous transformation matrix for each link.
@@ -213,15 +283,15 @@ RA::ARM_POS rakl::getArmPos(void)
 Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, double& theta)
 {
     theta *= D2R;
-    double cs = cos(theta);
-    double ss = sin(theta);
+    double ct = cos(theta);
+    double st = sin(theta);
     double ca = cos(D2R * alpha);
     double sa = sin(D2R * alpha);
 
     Matrix4d T;
-    T << cs,   -ss,   0,     A,
-      ss*ca, cs*ca, -sa, -sa*D,
-      ss*sa, cs*sa,  ca,  ca*D,
+    T << ct,   -st,   0,     A,
+      st*ca, ct*ca, -sa, -sa*D,
+      st*sa, ct*sa,  ca,  ca*D,
           0,     0,   0,     1;
     return T;
 }
@@ -234,7 +304,7 @@ Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, double& theta)
 */
 void rakl::tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& yaw_x)
 {
-    double eps=2.22044604925031e-5,sp,cp;
+    double eps=2.22044604925031e-5;
     if(fabs(m(0,0)) < eps && fabs(m(1,0)) < eps)
     {
         roll_z  = 0;
@@ -244,10 +314,55 @@ void rakl::tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& ya
     else
     {
         roll_z  = atan2(m(1,0), m(0,0));
-        sp = sin(roll_z);
-        cp = cos(roll_z);
-        pitch_y = atan2(-m(2,0), cp * m(0,0) + sp * m(1,0));
-        yaw_x   = atan2(sp * m(0,2) - cp * m(1,2), cp*m(1,1) - sp*m(0,1));
+        double sr = sin(roll_z);
+        double cr = cos(roll_z);
+        pitch_y = atan2(-m(2,0), cr * m(0,0) + sr * m(1,0));
+        yaw_x   = atan2(sr * m(0,2) - cr * m(1,2), cr * m(1,1) - sr * m(0,1));
     }
     return;
+}
+
+
+/********************************************************************************/
+/** \brief Roll Pitch Yaw to Rotation Matrix
+* A function to get roll, pitch, yaw from rotation matrix
+* \return N/A
+*/
+void rakl::rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, Matrix4d& tool_mat)
+{
+    Matrix4d mat_z = rotateX(roll_z);
+    Matrix4d mat_y = rotateX(pitch_y);
+    Matrix4d mat_x = rotateX(yaw_x);
+    tool_mat = mat_z * mat_y * mat_x;
+    return;
+}
+
+
+Matrix4d rakl::rotateX(const double& deg)
+{
+    Matrix3d m33;
+    m33 = AngleAxisd(deg * D2R, Vector3d::UnitX());
+    Matrix4d matrix;
+    matrix.topLeftCorner(3, 3) << m33;
+
+    return matrix;
+}
+
+
+Matrix4d rakl::rotateY(const double& deg)
+{
+    Matrix3d m33;
+    m33 = AngleAxisd(deg * D2R, Vector3d::UnitY());
+    Matrix4d matrix = Matrix4d::Identity();
+    matrix.topLeftCorner(3,3) << m33;
+    return matrix;
+}
+
+Matrix4d rakl::rotateZ(const double& deg)
+{
+    Matrix3d m33;
+    m33 = AngleAxisd(deg * D2R, Vector3d::UnitZ());
+    Matrix4d matrix = Matrix4d::Identity();
+    matrix.topLeftCorner(3,3) << m33;
+    return matrix;
 }

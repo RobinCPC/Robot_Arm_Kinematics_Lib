@@ -5,11 +5,15 @@
  */
 #pragma once
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 
-using Eigen::Matrix;
 using Eigen::Array;
+using Eigen::Matrix;
 using Eigen::MatrixXd;
 using Eigen::Matrix4d;
+using Eigen::Matrix3d;
+using Eigen::Vector3d;
+using Eigen::AngleAxisd;
 
 typedef Array<double, 6, 1> Array6d;
 
@@ -26,7 +30,7 @@ enum IK_RESULT
     IK_INPUT_INVALID    /*!< value 4 */
 };
 
-namespace RA //!< Robot Arm Property
+namespace RA //! Robot Arm Library namespace
 {
     /*! @struct AMR_POS     rakl.h
      *  @brief  A struct variable for Tool Center Point (TCP)
@@ -84,6 +88,8 @@ class rakl
 {
 public:
     rakl();         //!< Default Constructor
+
+    /*! Constructor with certain robot arm data. */
     rakl(
         Array6d a0,                     //!< Link length of all links (mm)
         Array6d alpha0,                 //!< Twist angle of all links (degree)
@@ -93,15 +99,110 @@ public:
         Array6d lowlimit0               //!< Lower limit of all joints
         );
     ~rakl();        //!< Destructor
+
+    /*!
+     * @brief Compute forward Kinematics for given angle, update each joint
+     *  value, and return current current position and orientation of TCP.
+     * @param q         An array of joint degree.
+     * @return ARM_POS  a structure include position and orientation of TCP.
+     */
     RA::ARM_POS forwardKin(Array6d q);
+
+    /*!
+     * @brief Compute homogeneous transformation matrix for given link properties,
+     *   and return the matrix.
+     * @param A         Given link length.
+     * @param alpha     Given link twist.
+     * @param D         Given link offset.
+     * @param theta     Given joint angle.
+     * @return  Homogeneous transformation matrix of given link properties.
+     */
+    Matrix4d Homo_trans(double& A, double& alpha, double& D, double& theta);
+
+    /*!
+     * @brief Get the position and orientation of the robot arm.
+     * @return  ARM_POS
+     */
     RA::ARM_POS getArmPos(void);
+
+    /*!
+     * @brief Set the HT matrix of the offset b/w the arm flange and
+     *        equiped tool or end-effector.
+     * @param tool_offset
+     * @return bool     Check if setting success
+     */
+    bool setToolOffset(RA::ARM_POS tool_offset);
+
+    /*!
+     * @brief Set the HT matrix of the working base of the robot arm.
+     * @param   Matrix4d
+     * @return
+     */
+    void setBase(Matrix4d& base);
+
+    /*!
+     * @brief Get the HT matrix of the working base of the robot arm.
+     * @return Matrix4d
+     */
+    Matrix4d getBase(void);
+
+    /*!
+     * @brief Get the link length `a` value between each joint of the robot arm.
+     * @return Array6d
+     */
+    Array6d getA(void);
+
+    /*!
+     * @brief Get the link twist \f$\alpha\f$  value between each joint of the robot arm.
+     * @return Array6d
+     */
+    Array6d getAlpha(void);
+
+    /*!
+     * @brief Get the link offset `d` value between each joint of the robot arm.
+     * @return Array6d
+     */
+    Array6d getD(void);
+
+    /*!
+     * @brief Get the joint angle \f$\theta\f$ value of each joint of the robot arm.
+     * @return Array6d
+     */
+    Array6d getTheta(void);
+
+    /*!
+     * @brief Set the upper limits of joint angles for the robot arm.
+     * @param Array6d
+     */
+    void setUpLimit(Array6d& up_lim);
+
+    /*!
+     * @brief Get the upper limits of joint angles of the robot arm.
+     * @return Array6d
+     */
+    Array6d getUpLimit(void);
+
+    /*!
+     * @brief Set the lower limits of joint angles for the robot arm.
+     * @param Array6d
+     */
+    void setLowLimit(Array6d& low_lim);
+
+    /*!
+     * @brief Get the lower limits of joint angles of the robot arm.
+     * @return Array6d
+     */
+    Array6d getLowLimit(void);
 
 
 protected:
-    /*! Input data of modified D-H parameter for robot arm */
+    /*! Link length data member of modified D-H parameter for robot arm */
     Array6d a;                          //!< Link length (mm)
+    /*! Link twist data member of modified D-H parameter for robot arm */
     Array6d alpha;                      //!< Link twist angle (degree)
+    /*! Link offset data member of modified D-H parameter for robot arm */
     Array6d d;                          //!< Link offset (mm)
+    /*! Joint angle data member of modified D-H parameter for robot arm */
     Array6d theta;                      //!< Joint angle (degree)
     Array6d uplimit;                    //!< Upper  limit of all joints
     Array6d lowlimit;                   //!< Lower limit of all joints
@@ -117,6 +218,10 @@ private:
     int pre_fit_solution;           //!< The index of configuration of previous IK
 
     // private functions
-    Matrix4d Homo_trans(double& A, double& alpha, double& D, double& theta);
+    // TODO: could move functions for matrix manipulating, such as rpy2tr & tr2rpy to math.h
     void tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& yaw_x);
+    void rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, Matrix4d& tool_mat);
+    Matrix4d rotateX(const double& deg);
+    Matrix4d rotateY(const double& deg);
+    Matrix4d rotateZ(const double& deg);
 };
