@@ -6,7 +6,6 @@ language: cpp
 # Compiler selection
 compiler:
     - gcc
-    - clang
 
 branches:
   only:
@@ -20,6 +19,7 @@ addons:
       - libeigen3-dev
       - doxygen
       - graphviz
+      - g++-6
 
 script:
   - mkdir build && cd build
