@@ -1,0 +1,36 @@
+# enable c++ support
+language: cpp
+# Ubuntu 14.04 Trusty support
+#sudo: required
+#dist: trusty
+# Compiler selection
+compiler:
+    - gcc
+    - clang
+
+branches:
+  only:
+    - master
+    - add-TravisCI
+
+addons:
+  apt:
+    packages:
+      - cmake
+      - libeigen3-dev
+      - doxygen
+      - graphviz
+
+script:
+  - mkdir build && cd build
+  - cmake ..
+  - make
+  - make install
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  local_dir: docs/html
+  github_token: $GH_REPO_TOKEN
+  on:
+    branch: add-TravisCI
