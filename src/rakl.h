@@ -3,6 +3,8 @@
  * @brief       A kinematics library for articulated robot arm
  * @author      Chien-Pin Chen
  */
+#ifndef RA_RAKL_H_
+#define RA_RAKL_H_
 #pragma once
 #include <iostream>
 #include <vector>
@@ -20,26 +22,27 @@ using Eigen::AngleAxisd;
 
 typedef Array<double, 6, 1> Array6d;
 
-/*!
- * @enum IK_RESULT
- * A set of enumeration to present the result of inverse kinematics (IK)
- */
-enum IK_RESULT
-{
-    IK_COMPLELE,        /*!< value 0 */
-    IK_NO_SOLUTION,     /*!< value 1 */
-    IK_ANGLE_LIMIT,     /*!< value 2 */
-    IK_SINGULAR,        /*!< value 3 */
-    IK_INPUT_INVALID    /*!< value 4 */
-};
 
 namespace RA //! Robot Arm Library namespace
 {
-    /*! @struct AMR_POS     rakl.h
+    /*!
+     * @enum IK_RESULT
+     * A set of enumeration to present the result of inverse kinematics (IK)
+     */
+    enum IK_RESULT
+    {
+        IK_COMPLELE,        /*!< value 0 */
+        IK_NO_SOLUTION,     /*!< value 1 */
+        IK_ANGLE_LIMIT,     /*!< value 2 */
+        IK_SINGULAR,        /*!< value 3 */
+        IK_INPUT_INVALID    /*!< value 4 */
+    };
+
+    /*! @struct ARM_POS     rakl.h
      *  @brief  A struct variable for Tool Center Point (TCP)
      *  ARM_POS storages the output of forward kinematic
      */
-    typedef struct ARM_POS
+    struct ARM_POS
     {
         /*! Position of TCP (mm) */
         double x;
@@ -53,7 +56,7 @@ namespace RA //! Robot Arm Library namespace
          *  and work_base coordination system
          */
         Array< Matrix4d, 7, 1> T;
-    }ARM_POS;
+    };
 
     /*!
      *  @brief  Overload << operator to print position & orieantation in  ARM_POS.
@@ -64,7 +67,7 @@ namespace RA //! Robot Arm Library namespace
      *  @brief  A struct variable for joints of robot arm
      *  ARM_AXIS_VALUE storage the output of Inverse kinematic
      */
-    typedef struct ARM_AXIS_VALUE
+    struct ARM_AXIS_VALUE
     {
         /*! Joints Angle of 8 solutions*/
         MatrixXd axis_value;
@@ -83,9 +86,8 @@ namespace RA //! Robot Arm Library namespace
                 solution_check[i] = singular_check[i] = limit_check[i] = 0;
             }
         }
-    }ARM_AXIS_VALUE;
+    };
 
-}
 
 // Class of kinematics of 6-axis robot arm
 /*! @class rakl     rakl.h
@@ -114,7 +116,8 @@ public:
      * @param q         An array of joint degree.
      * @return ARM_POS  a structure include position and orientation of TCP.
      */
-    RA::ARM_POS forwardKin(const Array6d& q);
+    ARM_POS forwardKin(const Array6d& q);
+
 
 
     /*!
@@ -132,7 +135,7 @@ public:
      * @brief Get the position and orientation of the robot arm.
      * @return  ARM_POS
      */
-    RA::ARM_POS getArmPos(void);
+    ARM_POS getArmPos(void);
 
     /*!
      * @brief Set the HT matrix of the offset b/w the arm flange and
@@ -140,7 +143,7 @@ public:
      * @param tool_offset
      * @return bool     Check if setting success
      */
-    bool setToolOffset(RA::ARM_POS tool_offset);
+    bool setToolOffset(ARM_POS tool_offset);
 
     /*!
      * @brief Set the HT matrix of the working base of the robot arm.
@@ -223,7 +226,7 @@ private:
     Array6d m_pre_theta;            //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
     Matrix4d m_T_act;               //!< HT matrix of TCP with respected to work base
     Matrix4d m_tool_T;              //!< HT matrix of TCP with respected to 6th joint (last joint coordination)
-    RA::ARM_POS m_pos_act;          //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
+    ARM_POS m_pos_act;          //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
     int pre_fit_solution;           //!< The index of configuration of previous IK
 
     // private functions
@@ -234,3 +237,6 @@ private:
     Matrix4d rotateY(const double& deg);
     Matrix4d rotateZ(const double& deg);
 };
+
+}       // namespace RA
+#endif  // RA_RAKL_H_

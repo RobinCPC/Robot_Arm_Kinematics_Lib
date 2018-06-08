@@ -30,7 +30,7 @@ else(EIGEN3_FOUND)
 endif(EIGEN3_FOUND)
 
 #build test run exec
-add_executable(test_run test/main.cpp)
+add_executable(test_run test/test_run.cpp)
 target_link_libraries(test_run rakl)
 
 # install test run in ./bin

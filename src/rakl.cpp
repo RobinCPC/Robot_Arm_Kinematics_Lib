@@ -13,7 +13,10 @@
 #define D2R  0.01745329251994329576923690768489 //!< constant to present  converting from degree to radius
 
 
-std::ostream& RA::operator<< (std::ostream& ost, const RA::ARM_POS& pose)
+namespace RA
+{
+
+std::ostream& operator<< (std::ostream& ost, const ARM_POS& pose)
 {
     auto rw12 = [&ost](auto vec_inp){   // use lambda to handle
         ost << '\n';
@@ -176,7 +179,7 @@ rakl::rakl(
 rakl::~rakl(){}
 
 /* Forward Kinematics */
-RA::ARM_POS rakl::forwardKin(const Array6d& q)
+ARM_POS rakl::forwardKin(const Array6d& q)
 {
     // storage input angles as previous angles for finding best solution in IK
     m_pre_theta = q;
@@ -218,13 +221,14 @@ RA::ARM_POS rakl::forwardKin(const Array6d& q)
 }
 
 
-RA::ARM_POS rakl::getArmPos(void)
+
+ARM_POS rakl::getArmPos(void)
 {
     return this->m_pos_act;
 }
 
 
-bool rakl::setToolOffset(RA::ARM_POS tool_offset)
+bool rakl::setToolOffset(ARM_POS tool_offset)
 {
     double roll = D2R * tool_offset.a;
     double pitch = D2R * tool_offset.b;
@@ -383,3 +387,5 @@ Matrix4d rakl::rotateZ(const double& deg)
     matrix.topLeftCorner(3,3) << m33;
     return matrix;
 }
+
+}   // namespace RA
