@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.2)
 project(RobotArmLib)
+# The project version number.
+set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
+set(VERSION_MINOR   0   CACHE STRING "Project minor version number.")
+set(VERSION_PATCH   2   CACHE STRING "Project patch version number.")
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CXX_FLAGS "-g -Wall -Wextra")
@@ -42,8 +46,6 @@ install(TARGETS rakl DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
     message("You Have Doxygen!\n")
-    message("${CMAKE_CURRENT_SOURCE_DIR}")
-    message("${CMAKE_CURRENT_BINARY_DIR}")
     set(BUILD_DOC_DIR ${CMAKE_SOURCE_DIR}/build/docs)
     if(NOT EXISTS ${BUILD_DOC_DIR})
         file(MAKE_DIRECTORY ${BUILD_DOC_DIR})
@@ -59,6 +61,9 @@ if(DOXYGEN_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM)
+
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs/html
+            DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/docs)
 else(DOXYGEN_FOUND)
     message("No Doxygen, can't build Doc!\n")
 endif(DOXYGEN_FOUND)
