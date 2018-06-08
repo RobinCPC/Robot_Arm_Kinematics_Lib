@@ -5,10 +5,28 @@
  *--------------------------------------------------------------------------------*/
 #include "rakl.h"
 
+#include <iomanip>
+
 
 /*-DEFINES---------------------------------------------------------------------*/
 #define R2D 57.295779513082320876798154814105   //!< constant to present converting from radius to degree
 #define D2R  0.01745329251994329576923690768489 //!< constant to present  converting from degree to radius
+
+
+std::ostream& RA::operator<< (std::ostream& ost, const RA::ARM_POS& pose)
+{
+    auto rw12 = [&ost](auto vec_inp){   // use lambda to handle
+        ost << '\n';
+        for(auto& inp : vec_inp)
+            ost << std::right << std::setw(12) << inp;
+    };
+
+    rw12( std::vector<char>({'x', 'y', 'z'}) );
+    rw12( std::vector<double>({pose.x, pose.y, pose.z}) );
+    rw12( std::vector<char>({'a', 'b', 'c'}) );
+    rw12( std::vector<double>({pose.a, pose.b, pose.c}) );
+    return ost;
+}
 
 /* ----------- Robot Arm Kinematics Library --------------*/
 rakl::rakl()
@@ -26,7 +44,7 @@ rakl::rakl()
     //    <<     j1,    j2,    j3,     j4,    j5,   j6
         a <<    0.0,  75.0, 270.0,   90.0,   0.0,   0.0;
     alpha <<  180.0,  90.0,   0.0,   90.0, -90.0, -90.0;
-        d << -335.0,   0.0,   0.0, -295.9,   0.0,  80.0;
+        d << -335.0,   0.0,   0.0, -295.0,   0.0,  80.0;
     theta <<    0.0, -90.0,   0.0,    0.0,   0.0,   0.0;
 
      uplimit <<  170.,   45.,  169.0-90.0,  190.,  120.,  350.; /* degree */
@@ -81,12 +99,12 @@ rakl::rakl()
 }
 
 rakl::rakl(
-        Array6d a0,
-        Array6d alpha0,
-        Array6d d0,
-        Array6d ini_theta,
-        Array6d uplimit0,
-        Array6d lowlimit0)
+        const Array6d& a0,
+        const Array6d& alpha0,
+        const Array6d& d0,
+        const Array6d& ini_theta,
+        const Array6d& uplimit0,
+        const Array6d& lowlimit0)
 {
     /* Initialize */
     m_ini_theta = Array6d::Constant(0.0);
@@ -158,7 +176,7 @@ rakl::rakl(
 rakl::~rakl(){}
 
 /* Forward Kinematics */
-RA::ARM_POS rakl::forwardKin(Array6d q)
+RA::ARM_POS rakl::forwardKin(const Array6d& q)
 {
     // storage input angles as previous angles for finding best solution in IK
     m_pre_theta = q;
@@ -280,11 +298,10 @@ Array6d rakl::getLowLimit(void)
 * A function to build homogeneous transformation matrix for each link.
 * \return Matrix4d
 */
-Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, double& theta)
+Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, const double& theta)
 {
-    theta *= D2R;
-    double ct = cos(theta);
-    double st = sin(theta);
+    double ct = cos(D2R * theta);
+    double st = sin(D2R * theta);
     double ca = cos(D2R * alpha);
     double sa = sin(D2R * alpha);
 
@@ -330,8 +347,8 @@ void rakl::tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& ya
 */
 void rakl::rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, Matrix4d& tool_mat)
 {
-    Matrix4d mat_z = rotateX(roll_z);
-    Matrix4d mat_y = rotateX(pitch_y);
+    Matrix4d mat_z = rotateZ(roll_z);
+    Matrix4d mat_y = rotateY(pitch_y);
     Matrix4d mat_x = rotateX(yaw_x);
     tool_mat = mat_z * mat_y * mat_x;
     return;
@@ -342,7 +359,7 @@ Matrix4d rakl::rotateX(const double& deg)
 {
     Matrix3d m33;
     m33 = AngleAxisd(deg * D2R, Vector3d::UnitX());
-    Matrix4d matrix;
+    Matrix4d matrix = Matrix4d::Identity();
     matrix.topLeftCorner(3, 3) << m33;
 
     return matrix;

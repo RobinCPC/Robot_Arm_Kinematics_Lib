@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(RobotArmLib)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 #set(CXX_FLAGS "-g -Wall -Wextra")
 #set(CMAKE_CXX_FLAGS ${CXX_FLAGS})
 
@@ -35,6 +35,7 @@ target_link_libraries(test_run rakl)
 
 # install test run in ./bin
 install(TARGETS test_run DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS rakl DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
 
 # Build Doxygen Document

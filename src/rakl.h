@@ -4,6 +4,9 @@
  * @author      Chien-Pin Chen
  */
 #pragma once
+#include <iostream>
+#include <vector>
+
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
@@ -52,6 +55,11 @@ namespace RA //! Robot Arm Library namespace
         Array< Matrix4d, 7, 1> T;
     }ARM_POS;
 
+    /*!
+     *  @brief  Overload << operator to print position & orieantation in  ARM_POS.
+     */
+    std::ostream& operator<< (std::ostream& ost, const ARM_POS& pose);
+
     /*! @struct ARM_AXIS_VALUE  rakl.h
      *  @brief  A struct variable for joints of robot arm
      *  ARM_AXIS_VALUE storage the output of Inverse kinematic
@@ -91,12 +99,12 @@ public:
 
     /*! Constructor with certain robot arm data. */
     rakl(
-        Array6d a0,                     //!< Link length of all links (mm)
-        Array6d alpha0,                 //!< Twist angle of all links (degree)
-        Array6d d0,                     //!< Link offset of all links (mm)
-        Array6d ini_theta,              //!< Initial value of all joint angles
-        Array6d uplimit0,               //!< Upper limit of all joints
-        Array6d lowlimit0               //!< Lower limit of all joints
+        const Array6d& a0,              //!< Link length of all links (mm)
+        const Array6d& alpha0,          //!< Twist angle of all links (degree)
+        const Array6d& d0,              //!< Link offset of all links (mm)
+        const Array6d& ini_theta,       //!< Initial value of all joint angles
+        const Array6d& uplimit0,        //!< Upper limit of all joints
+        const Array6d& lowlimit0        //!< Lower limit of all joints
         );
     ~rakl();        //!< Destructor
 
@@ -106,7 +114,8 @@ public:
      * @param q         An array of joint degree.
      * @return ARM_POS  a structure include position and orientation of TCP.
      */
-    RA::ARM_POS forwardKin(Array6d q);
+    RA::ARM_POS forwardKin(const Array6d& q);
+
 
     /*!
      * @brief Compute homogeneous transformation matrix for given link properties,
@@ -117,7 +126,7 @@ public:
      * @param theta     Given joint angle.
      * @return  Homogeneous transformation matrix of given link properties.
      */
-    Matrix4d Homo_trans(double& A, double& alpha, double& D, double& theta);
+    Matrix4d Homo_trans(double& A, double& alpha, double& D, const double& theta);
 
     /*!
      * @brief Get the position and orientation of the robot arm.

@@ -1,25 +1,25 @@
 #include <iostream>
+#include <memory>
+
 #include "../src/rakl.h"
 
 int main(void)
 {
-    rakl robot = rakl();
-    RA::ARM_POS mPos = robot.getArmPos();
+    //std::unique_ptr<rakl> robot {new rakl};                   // need C++11
+    //std::unique_ptr<rakl> robot = std::make_unique<rakl>();   // need C++14
+    auto robot = std::make_unique<rakl>();                      // need C++14
+    auto mPos = robot->getArmPos();
     std::cout << "initial position of TCP:\n";
     std::cout << mPos.T[5] << '\n';
-    std::cout << "\tx, \ty, \tz\n";
-    std::cout << '\t' << mPos.x << '\t' << mPos.y << '\t' << mPos.z << '\n';
-    std::cout << "\ta, \tb, \tc\n";
-    std::cout << '\t' << mPos.a << '\t' << mPos.b << '\t' << mPos.c << '\n';
+    std::cout << mPos << '\n';
 
+    // Test Forward Kinematics
     Array6d qIn;
-    qIn << 90. , -90 , 0 , 0  , 0 , 0;
-    mPos = robot.forwardKin(qIn);
+    qIn << 45. , -90 , 0 , 0  , 90. , 0;    // turn 1st joint 45 deg and 5th 90 deg.
+    mPos = robot->forwardKin(qIn);
     std::cout << "\n\nUpdate position of TCP:\n";
     std::cout << mPos.T[5] << "\n\n";
-    std::cout << "\tx, \ty, \tz\n";
-    std::cout << '\t' << mPos.x << '\t' << mPos.y << '\t' << mPos.z << '\n';
-    std::cout << "\ta, \tb, \tc\n";
-    std::cout << '\t' << mPos.a << '\t' << mPos.b << '\t' << mPos.c << '\n';
+    std::cout << mPos;
+
     return 0;
 }
