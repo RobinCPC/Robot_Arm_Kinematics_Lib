@@ -24,6 +24,8 @@ addons:
       - g++-6
 
 script:
+  - export CXX=g++-6
+  - export CC=gcc-6
   - mkdir build && cd build
   - cmake ..
   - make
