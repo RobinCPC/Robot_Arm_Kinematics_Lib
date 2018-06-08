@@ -26,13 +26,13 @@ int main(void)
     std::cout << mPos.T[5] << "\n\n";
     std::cout << mPos;
 
-    // Test Inverse Kinematics
-    Array6d joints;
-    ARM_AXIS_VALUE all_sols;
-    IK_RESULT idx = robot->inverseKin(261.63, -261.63,
-                                      615., -45., 0., 180.,
-                                      joints, all_sols);
-    std::cout << '\n' << idx << '\n';
+    //// Test Inverse Kinematics
+    //Array6d joints;
+    //ARM_AXIS_VALUE all_sols;
+    //IK_RESULT idx = robot->inverseKin(261.63, -261.63,
+    //                                  615., -45., 0., 180.,
+    //                                  joints, all_sols);
+    //std::cout << '\n' << idx << '\n';
 
     return 0;
 }
