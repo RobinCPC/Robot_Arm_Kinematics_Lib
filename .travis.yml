@@ -3,6 +3,7 @@ language: cpp
 # Compiler selection
 compiler:
     - gcc
+    - clang
 
 cache:
     apt:true
@@ -45,10 +46,20 @@ matrix:
             - graphviz
             - g++-6
 
+    - os: osx
+      osx_image: xcode9.2
+      compiler: clang
+
 before_install:
     # linux
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       eval "${MATRIX_EVAL}";
+      fi
+    # macOS
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update;
+      brew install eigen3;
+      brew install doxygen --with-graphviz;
       fi
 
 script:
