@@ -47,7 +47,7 @@ matrix:
 
 before_install:
     # linux
-    - if [[ "$TRAVIS_OS_NAME" == "linux"]]; then
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       eval "${MATRIX_EVAL}";
       fi
 
