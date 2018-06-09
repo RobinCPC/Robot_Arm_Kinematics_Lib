@@ -1,9 +1,10 @@
 # enable c++ support
 language: cpp
-# Compiler selection
-compiler:
-    - gcc
-    - clang
+
+## Compiler selection
+#compiler:
+#    - gcc
+#    - clang
 
 cache:
     apt:true
@@ -58,7 +59,7 @@ before_install:
     # macOS
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update;
-      brew install eigen3;
+      brew install eigen;
       brew install doxygen --with-graphviz;
       fi
 
