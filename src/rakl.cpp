@@ -5,8 +5,6 @@
  *--------------------------------------------------------------------------------*/
 #include "rakl.h"
 
-#include <iomanip>
-
 
 /*-DEFINES---------------------------------------------------------------------*/
 #define R2D 57.295779513082320876798154814105   //!< constant to present converting from radius to degree
@@ -18,16 +16,18 @@ namespace RA
 
 std::ostream& operator<< (std::ostream& ost, const ARM_POS& pose)
 {
-    auto rw12 = [&ost](auto vec_inp){   // use lambda to handle
+#if __cplusplus >= 201402L
+    auto ostrVec = [](std::ostream& ost , auto vec_inp, int width=12){   // use lambda to handle
         ost << '\n';
         for(auto& inp : vec_inp)
-            ost << std::right << std::setw(12) << inp;
+            ost << std::right << std::setw(width) << inp;
     };
+#endif
 
-    rw12( std::vector<char>({'x', 'y', 'z'}) );
-    rw12( std::vector<double>({pose.x, pose.y, pose.z}) );
-    rw12( std::vector<char>({'a', 'b', 'c'}) );
-    rw12( std::vector<double>({pose.a, pose.b, pose.c}) );
+    ostrVec( ost, std::vector<char>({'x', 'y', 'z'}) );
+    ostrVec( ost, std::vector<double>({pose.x, pose.y, pose.z}) );
+    ostrVec( ost, std::vector<char>({'a', 'b', 'c'}) );
+    ostrVec( ost, std::vector<double>({pose.a, pose.b, pose.c}) );
     return ost;
 }
 

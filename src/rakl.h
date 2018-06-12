@@ -5,8 +5,8 @@
  */
 #ifndef RA_RAKL_H_
 #define RA_RAKL_H_
-#pragma once
 #include <iostream>
+#include <iomanip>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -60,8 +60,25 @@ namespace RA //! Robot Arm Library namespace
 
     /*!
      *  @brief  Overload << operator to print position & orieantation in  ARM_POS.
+     *  @param  ost     ostream object to storage string for printing out.
+     *  @param  pose    ARM_POS object that will be printed out.
      */
     std::ostream& operator<< (std::ostream& ost, const ARM_POS& pose);
+
+#if __cplusplus == 201103L
+    /*!
+     *  @brief  a template to ostream a vector of different type (char, double)
+     *  @tparam T   the type that storage in vector for printing out.
+     */
+    template<typename T>
+    void ostrVec(std::ostream& ost, std::vector<T> vec_inp, int width=12)
+    {
+        ost << '\n';
+        for(auto& inp : vec_inp)
+            ost << std::right << std::setw(width) << inp;
+        return;
+    }
+#endif
 
     /*! @struct ARM_AXIS_VALUE  rakl.h
      *  @brief  A struct variable for joints of robot arm

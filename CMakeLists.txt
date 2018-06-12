@@ -5,7 +5,7 @@ set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
 set(VERSION_MINOR   0   CACHE STRING "Project minor version number.")
 set(VERSION_PATCH   2   CACHE STRING "Project patch version number.")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 #set(CXX_FLAGS "-g -Wall -Wextra")
 #set(CMAKE_CXX_FLAGS ${CXX_FLAGS})
 
