@@ -1,11 +1,6 @@
 # enable c++ support
 language: cpp
 
-## Compiler selection
-#compiler:
-#    - gcc
-#    - clang
-
 cache:
     apt:true
 
@@ -75,4 +70,4 @@ deploy:
   local_dir: docs/html
   github_token: $GH_REPO_TOKEN
   on:
-    branch: add-TravisCI
+    branch: master
