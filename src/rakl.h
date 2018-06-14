@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <array>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -31,7 +32,7 @@ namespace RA //! Robot Arm Library namespace
      */
     enum IK_RESULT
     {
-        IK_COMPLELE,        /*!< value 0 */
+        IK_COMPLETE,        /*!< value 0 */
         IK_NO_SOLUTION,     /*!< value 1 */
         IK_ANGLE_LIMIT,     /*!< value 2 */
         IK_SINGULAR,        /*!< value 3 */
@@ -59,7 +60,7 @@ namespace RA //! Robot Arm Library namespace
     };
 
     /*!
-     *  @brief  Overload << operator to print position & orieantation in  ARM_POS.
+     *  @brief  Overload << operator to print position & orientation in  ARM_POS.
      *  @param  ost     ostream object to storage string for printing out.
      *  @param  pose    ARM_POS object that will be printed out.
      */
@@ -89,10 +90,10 @@ namespace RA //! Robot Arm Library namespace
         /*! Joints Angle of 8 solutions*/
         MatrixXd axis_value;
         /*! Use following method to find the fittest solution */
-        int fit;                    //!< the index of the fittest solution.
-        bool solution_check[8];     //!< check if having solution.
-        bool singular_check[8];     //!< check if in singular point.
-        bool limit_check[8];        //!< check if over angle limit.
+        int fit;                                        //!< the index of the fittest solution.
+        std::array<bool, 8> solution_check = {{0}};     //!< check if having solution.
+        std::array<bool, 8> singular_check = {{0}};     //!< check if in singular point.
+        std::array<bool, 8> limit_check = {{0}};        //!< check if over angle limit.
 
         ARM_AXIS_VALUE()
         {
@@ -135,7 +136,52 @@ public:
      */
     ARM_POS forwardKin(const Array6d& q);
 
+    /*!
+     * @brief Compute inverse kinematics for given position and orientation in
+     *        Cartesian coordination system.
+     * @return IK_RESULT  a enumerator indicates the result of inverse kinematics.
+     */
+    IK_RESULT inverseKin(
+            const double& x,            //!< x value of the position.
+            const double& y,            //!< y value of the position.
+            const double& z,            //!< z value of the position.
+            const double& roll,         //!< roll value of the orientation.
+            const double& pitch,        //!< pitch value of the orientation.
+            const double& yaw,          //!< yaw value of the orientation.
+            Array6d& joints,            //!< the best fittest IK solution.
+            ARM_AXIS_VALUE& all_sols    //!< a data structure to store all possible solutions.
+            );
 
+    /*!
+     * @brief Compute inverse kinematics for two links (pitch-pitch) structure
+     *        by given first joint.
+     * @param th1_rad  angle (radius) of first joint.
+     * @param p0       the position of wrist point wrt joint 0 (base)
+     * @param config   a vector of 3 bits to indicator 8 configuration (solutions) of robot arm.
+     * @param all_sols
+     * @return
+     */
+    void solvePitchPitchIK(const double& th1_rad, const Eigen::Vector4d& p0,
+                           const std::vector<bool>& config,
+                           ARM_AXIS_VALUE& all_sols);
+
+    /*!
+     * @brief Compute inverse kinematics for wrist mechanism (row-pitch-row) structure
+     *        by given first joint.
+     * @param th1_rad  angle (radius) of first joint.
+     * @param config   a vector of 3 bits to indicator 8 configuration (solutions) of robot arm.
+     * @param flange_tr a H.T. Matrix of robot flange with respect to it base.
+     * @param all_sols a structure to storage all possible solutions of inverse kinematics.
+     */
+    void solveRowPitchRowIK(const double& th1_rad, const std::vector<bool>& config,
+                            const Matrix4d& flange_tr,
+                            ARM_AXIS_VALUE& all_sols);
+
+    /*!
+     * @brief Find the solutions in all_sols that is most fit to previous joints value
+     * @param all_sols a structure to storage all possible solutions of inverse kinematics.
+     */
+    IK_RESULT solutionCheck(ARM_AXIS_VALUE& sols);
 
     /*!
      * @brief Compute homogeneous transformation matrix for given link properties,
@@ -156,7 +202,7 @@ public:
 
     /*!
      * @brief Set the HT matrix of the offset b/w the arm flange and
-     *        equiped tool or end-effector.
+     *        equipped tool or end-effector.
      * @param tool_offset
      * @return bool     Check if setting success
      */
@@ -243,7 +289,7 @@ private:
     Array6d m_pre_theta;            //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
     Matrix4d m_T_act;               //!< HT matrix of TCP with respected to work base
     Matrix4d m_tool_T;              //!< HT matrix of TCP with respected to 6th joint (last joint coordination)
-    ARM_POS m_pos_act;          //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
+    ARM_POS m_pos_act;              //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
     int pre_fit_solution;           //!< The index of configuration of previous IK
 
     // private functions

@@ -7,7 +7,6 @@ cache:
 branches:
   only:
     - master
-    - add-TravisCI
 
 # use matrix to build on different setting
 matrix:
@@ -60,7 +59,7 @@ before_install:
 
 script:
   - mkdir build && cd build
-  - cmake ..
+  - cmake .. -DCMAKE_BUILD_TYPE=Release
   - make
   - make install
 

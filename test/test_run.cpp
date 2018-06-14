@@ -29,15 +29,18 @@ int main(void)
     mPos = robot->forwardKin(qIn);
     std::cout << "\n\nUpdate position of TCP:\n";
     std::cout << mPos.T[5] << "\n\n";
-    std::cout << mPos;
+    std::cout << mPos << "\n\n";
 
-    //// Test Inverse Kinematics
-    //Array6d joints;
-    //ARM_AXIS_VALUE all_sols;
-    //IK_RESULT idx = robot->inverseKin(261.63, -261.63,
-    //                                  615., -45., 0., 180.,
-    //                                  joints, all_sols);
-    //std::cout << '\n' << idx << '\n';
+    // Test Inverse Kinematics
+    Array6d joints;
+    ARM_AXIS_VALUE all_sols;
+    IK_RESULT idx = robot->inverseKin(261.63, -261.63,
+                                      615., -45., 0., 180.,
+                                      joints, all_sols);
+    std::cout << '\n' << idx << '\n';
+    std::cout << "\n The most fit solution: " << all_sols.fit << '\n';
+    std::cout << "\n axis_value:\n" << all_sols.axis_value.transpose() << '\n';
+    std::cout << "\n The joint values: \n" << joints << '\n';
 
     return 0;
 }
