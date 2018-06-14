@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>kinDemo</class>
+ <widget class="QDialog" name="kinDemo">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>777</width>
+    <height>552</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>kinDemo</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="QTableWidget" name="dhTableWidget">
+      <property name="minimumSize">
+       <size>
+        <width>500</width>
+        <height>210</height>
+       </size>
+      </property>
+     </widget>
+     <widget class="QWidget" name="">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <widget class="QPushButton" name="initKr5Btn">
+           <property name="toolTip">
+            <string>Initialize Robot setting as KUKA KR5</string>
+           </property>
+           <property name="toolTipDuration">
+            <number>100</number>
+           </property>
+           <property name="text">
+            <string>Initial_KR5</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="fkBtn">
+           <property name="toolTip">
+            <string>Compute forward Kinematics</string>
+           </property>
+           <property name="toolTipDuration">
+            <number>100</number>
+           </property>
+           <property name="text">
+            <string>Forward_Kin</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QPushButton" name="ikBtn">
+           <property name="toolTip">
+            <string>Compute Inverse Kinematics</string>
+           </property>
+           <property name="toolTipDuration">
+            <number>100</number>
+           </property>
+           <property name="text">
+            <string>Inversed_Kin</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="resetBtn">
+           <property name="toolTip">
+            <string>Reseting the robot configuration coording to DH-Table</string>
+           </property>
+           <property name="toolTipDuration">
+            <number>100</number>
+           </property>
+           <property name="text">
+            <string>Reset_Config</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="tcpBox">
+         <property name="title">
+          <string>TCP</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="2" column="2">
+           <widget class="QLabel" name="rowLabel">
+            <property name="text">
+             <string>Row</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="yawLabel">
+            <property name="text">
+             <string>Yaw</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="pyEdit"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLineEdit" name="pxEdit"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="pitchLabel">
+            <property name="text">
+             <string>Pitch</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="YLabel">
+            <property name="text">
+             <string>Y</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLineEdit" name="rowEdit"/>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLineEdit" name="pzEdit"/>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLineEdit" name="yawEdit"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLineEdit" name="pitchEdit"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="ZLabel">
+            <property name="text">
+             <string>Z</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="XLabel">
+            <property name="text">
+             <string>X</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="solCheckLabel">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="text">
+          <string>Solution Check</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>false</bool>
+         </property>
+         <property name="margin">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QLabel" name="SolSel_Label">
+           <property name="text">
+            <string>Best_fit_Solution</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="solComboBox">
+           <item>
+            <property name="text">
+             <string>Solution 1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solution 2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solution 3</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solution 4</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solution 5</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solution 6</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solution 7</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solution 8</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QTableWidget" name="solTableWidget">
+     <property name="minimumSize">
+      <size>
+       <width>600</width>
+       <height>210</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>initKr5Btn</sender>
+   <signal>clicked()</signal>
+   <receiver>kinDemo</receiver>
+   <slot>OnBtnClickInit()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>542</x>
+     <y>19</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>517</x>
+     <y>22</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>fkBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>kinDemo</receiver>
+   <slot>OnBtnClickFK()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>746</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>774</x>
+     <y>21</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ikBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>kinDemo</receiver>
+   <slot>OnBtnClickIK()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>575</x>
+     <y>59</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>577</x>
+     <y>76</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>resetBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>kinDemo</receiver>
+   <slot>OnBtnClickReset()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>719</x>
+     <y>57</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>719</x>
+     <y>68</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>OnBtnClickInit()</slot>
+  <slot>OnBtnClickFK()</slot>
+  <slot>OnBtnClickIK()</slot>
+  <slot>OnBtnClickReset()</slot>
+ </slots>
+</ui>
