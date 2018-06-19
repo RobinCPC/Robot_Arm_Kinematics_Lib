@@ -18,14 +18,14 @@ int main(void)
     //std::unique_ptr<Artic> robot = std::make_unique<Artic>();     // need C++14
     auto robot = std::make_unique<Artic>();                         // need C++14
 #endif
-    auto mPos = robot->getArmPos();
+    auto mPos = robot->getArmPose();
     std::cout << "initial position of TCP:\n";
     std::cout << mPos.T[5] << '\n';
     std::cout << mPos << '\n';
 
     // Test Forward Kinematics
     Array6d qIn;
-    qIn << 45. , -90 , 0 , 0  , 90. , 0;    // turn 1st joint 45 deg and 5th 90 deg.
+    qIn << 45. , -90 , 45. , 0  , 90. , 0;    // turn 1st joint 45 deg and 5th 90 deg.
     mPos = robot->forwardKin(qIn);
     std::cout << "\n\nUpdate position of TCP:\n";
     std::cout << mPos.T[5] << "\n\n";
@@ -34,8 +34,8 @@ int main(void)
     // Test Inverse Kinematics
     Array6d joints;
     ArmAxisValue all_sols;
-    IK_RESULT idx = robot->inverseKin(261.63, -261.63,
-                                      615., -45., 0., 180.,
+    IK_RESULT idx = robot->inverseKin(205.533,-205.533,403.475,
+                                         -45.,     45.,   180.,
                                       joints, all_sols);
     std::cout << '\n' << idx << '\n';
     std::cout << "\n The most fit solution: " << all_sols.fit << '\n';

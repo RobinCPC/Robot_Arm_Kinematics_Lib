@@ -9,8 +9,8 @@
 
 
 /*-DEFINES---------------------------------------------------------------------*/
-#define R2D 57.295779513082320876798154814105   //!< constant to present converting from radius to degree
-#define D2R  0.01745329251994329576923690768489 //!< constant to present  converting from degree to radius
+#define R2D 57.295779513082320876798154814105   //!< constant to present converting from radian to degree
+#define D2R  0.01745329251994329576923690768489 //!< constant to present  converting from degree to radian
 
 
 namespace rb
@@ -89,7 +89,7 @@ Artic::Artic()
     m_pos_act.y = work_base(1,3);
     m_pos_act.z = work_base(2,3);
     tr2rpy(work_base, m_pos_act.a, m_pos_act.b, m_pos_act.c);
-    m_pos_act.a *= R2D;                 // change radius to degree
+    m_pos_act.a *= R2D;                 // change radian to degree
     m_pos_act.b *= R2D;
     m_pos_act.c *= R2D;
 
@@ -163,7 +163,7 @@ Artic::Artic(
     m_pos_act.y = work_base(1,3);
     m_pos_act.z = work_base(2,3);
     tr2rpy(work_base, m_pos_act.a, m_pos_act.b, m_pos_act.c);
-    m_pos_act.a *= R2D;                 // change radius to degree
+    m_pos_act.a *= R2D;                 // change radian to degree
     m_pos_act.b *= R2D;
     m_pos_act.c *= R2D;
 
@@ -374,7 +374,10 @@ void Artic::solvePitchPitchIK(const double& th1, const Eigen::Vector4d& p0,
         double th3_12 = 2 * atan2(k1-sqrt(ks), k3+k2);      // upper arm
         double th3_34 = 2 * atan2(k1+sqrt(ks), k3+k2);      // lower arm
 
-        // TODO: add pre check if theta3 between 180 and -180 deg
+        // check if need to remap joint value to suitable range
+        preCheck(3, th3_12);
+        preCheck(3, th3_34);
+
         all_sols.axis_value(config[0]*4 + 0, 2) = th3_12;
         all_sols.axis_value(config[0]*4 + 1, 2) = th3_12;
         all_sols.axis_value(config[0]*4 + 2, 2) = th3_34;
@@ -391,7 +394,7 @@ void Artic::solvePitchPitchIK(const double& th1, const Eigen::Vector4d& p0,
         double cos2 = (r1/v1 - r2/v2)/(u1/v1 - u2/v2);
 
         double th2_12 = atan2(sin2,cos2);
-        //pre_check(2, the2_12, axis_limit, m_pre_theta);
+        preCheck(2, th2_12);
         all_sols.axis_value(config[0]*4 + 0, 1) = th2_12;
         all_sols.axis_value(config[0]*4 + 1, 1) = th2_12;
 
@@ -406,7 +409,7 @@ void Artic::solvePitchPitchIK(const double& th1, const Eigen::Vector4d& p0,
         cos2 = (r1/v1 - r2/v2)/(u1/v1 - u2/v2);
 
         double th2_34 = atan2(sin2,cos2);
-        //pre_check(2, the2_34, axis_limit, m_pre_theta);
+        preCheck(2, th2_34);
         all_sols.axis_value(config[0]*4 + 2, 1) = th2_34;
         all_sols.axis_value(config[0]*4 + 3, 1) = th2_34;
     }
@@ -451,24 +454,24 @@ void Artic::solveRowPitchRowIK(const double& th1, const std::vector<bool>& confi
         c4 = -tr36(0, 2) / sin(th5_1);
         s4 = -tr36(2, 2) / sin(th5_1);
         th4_1 = atan2(s4, c4);
-        //pre_check(4, th4_1, axis_limit, m_pre_theta);
+        preCheck(4, th4_1);
 
         c6 = tr36(1, 0) / sin(th5_1);
         s6 = -tr36(1, 1) / sin(th5_1);
         th6_1 = atan2(s6,c6);
-        //pre_check(6, th6_1, axis_limit, m_pre_theta);
+        preCheck(6, th6_1);
 
         //solution 2 of theta 5,4,6
         th5_2 = -th5_1;
         c4 = -tr36(0, 2) / sin(th5_2);
         s4 = -tr36(2, 2) / sin(th5_2);
         th4_2 = atan2(s4, c4);
-        //pre_check(4, th4_2, axis_limit, m_pre_theta);
+        preCheck(4, th4_2);
 
         c6 = tr36(1, 0) / sin(th5_2);
         s6 = -tr36(1, 1) / sin(th5_2);
         th6_2 = atan2(s6,c6);
-        //pre_check(6, th6_2, axis_limit, m_pre_theta);
+        preCheck(6, th6_2);
     }
 
     all_sols.axis_value(config_start, 3) = th4_1;
@@ -556,7 +559,29 @@ IK_RESULT Artic::solutionCheck(ArmAxisValue& sols)
     return check;
 }
 
-ArmPose Artic::getArmPos(void)
+void Artic::preCheck(const int& njoint, double& rad)
+{
+    int idx = njoint - 1;
+    double pre_theta = this->m_pre_theta[idx];
+    double deg = rad * R2D;
+    std::array<double, 3> poss_rad = {{rad, rad + 2*M_PI, rad - 2*M_PI}};
+    std::array<double, 3> poss_deg = {{deg, deg + 360., deg - 360.}};
+
+    for(size_t i=1; i < poss_deg.size(); ++i)
+    {
+        bool in_range = poss_deg[i] <= this->uplimit[idx] &&
+                        poss_deg[i] >= this->lowlimit[idx];
+        bool is_closer = pow(poss_deg[i] - pre_theta, 2) <
+                         pow(poss_deg[0] - pre_theta, 2);
+        if( in_range && is_closer)
+        {
+            rad = poss_rad[i];
+        }
+    }
+    return;
+}
+
+ArmPose Artic::getArmPose(void)
 {
     return this->m_pos_act;
 }

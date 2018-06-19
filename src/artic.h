@@ -156,7 +156,7 @@ public:
     /*!
      * @brief Compute inverse kinematics for two links (pitch-pitch) structure
      *        by given first joint.
-     * @param th1_rad  angle (radius) of first joint.
+     * @param th1_rad  angle (radian) of first joint.
      * @param p0       the position of wrist point wrt joint 0 (base)
      * @param config   a vector of 3 bits to indicator 8 configuration (solutions) of robot arm.
      * @param all_sols
@@ -169,7 +169,7 @@ public:
     /*!
      * @brief Compute inverse kinematics for wrist mechanism (row-pitch-row) structure
      *        by given first joint.
-     * @param th1_rad  angle (radius) of first joint.
+     * @param th1_rad  angle (radian) of first joint.
      * @param config   a vector of 3 bits to indicator 8 configuration (solutions) of robot arm.
      * @param flange_tr a H.T. Matrix of robot flange with respect to it base.
      * @param all_sols a structure to storage all possible solutions of inverse kinematics.
@@ -183,6 +183,14 @@ public:
      * @param sols a structure to storage all possible solutions of inverse kinematics.
      */
     IK_RESULT solutionCheck(ArmAxisValue& sols);
+
+    /*!
+     * @brief Check the value of individual joint depend join limits. Will map
+     *        map the value to corrected range if possible.
+     * @param njoint    index of joint indicate which joint is examined.
+     * @param rad       the value of joint will be check and update as output.
+     */
+    void preCheck(const int& njoint, double& rad);
 
     /*!
      * @brief Compute homogeneous transformation matrix for given link properties,
@@ -199,7 +207,7 @@ public:
      * @brief Get the position and orientation of the robot arm.
      * @return  ArmPose
      */
-    ArmPose getArmPos(void);
+    ArmPose getArmPose(void);
 
     /*!
      * @brief Set the HT matrix of the offset b/w the arm flange and
