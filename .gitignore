@@ -31,3 +31,6 @@
 # CMake building directory
 build
 bin
+
+# Apple desktop services store
+.DS_Store
