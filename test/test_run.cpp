@@ -2,9 +2,9 @@
 #include <memory>
 #include <chrono>
 
-#include "../src/rakl.h"
+#include "../src/artic.h"
 
-using namespace RA;
+using namespace rb;
 
 // TODO: Use smart_ptr to declare robot and use chrono to
 // check computing time of FK and IK.
@@ -12,11 +12,11 @@ int main(void)
 {
 #if __cplusplus == 201103L
     std::cout << "Support C++ 11\n";
-    std::unique_ptr<rakl> robot {new rakl};                   // need C++11
+    std::unique_ptr<Artic> robot {new Artic};                       // need C++11
 #elif __cplusplus >= 201402L
     std::cout << "Support C++ 14\n";
-    //std::unique_ptr<rakl> robot = std::make_unique<rakl>();   // need C++14
-    auto robot = std::make_unique<rakl>();                      // need C++14
+    //std::unique_ptr<Artic> robot = std::make_unique<Artic>();     // need C++14
+    auto robot = std::make_unique<Artic>();                         // need C++14
 #endif
     auto mPos = robot->getArmPos();
     std::cout << "initial position of TCP:\n";
@@ -33,7 +33,7 @@ int main(void)
 
     // Test Inverse Kinematics
     Array6d joints;
-    ARM_AXIS_VALUE all_sols;
+    ArmAxisValue all_sols;
     IK_RESULT idx = robot->inverseKin(261.63, -261.63,
                                       615., -45., 0., 180.,
                                       joints, all_sols);

@@ -22,24 +22,24 @@ else(EIGEN3_FOUND)
         )
 endif(EIGEN3_FOUND)
 
-# build rakl library
-add_library(rakl SHARED
-    src/rakl.cpp
-    src/rakl.h
+# build artic library
+add_library(artic SHARED
+    src/artic.cpp
+    src/artic.h
     )
 if(EIGEN3_FOUND)
-    target_link_libraries(rakl Eigen3::Eigen)
+    target_link_libraries(artic Eigen3::Eigen)
 else(EIGEN3_FOUND)
-    target_include_directories( rakl PUBLIC "/usr/include/eigen3")
+    target_include_directories( artic PUBLIC "/usr/include/eigen3")
 endif(EIGEN3_FOUND)
 
 #build test run exec
 add_executable(test_run test/test_run.cpp)
-target_link_libraries(test_run rakl)
+target_link_libraries(test_run artic)
 
 # install test run in ./bin
 install(TARGETS test_run DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS rakl DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS artic DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
 
 # Build Doxygen Document

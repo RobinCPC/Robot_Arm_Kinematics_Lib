@@ -1,10 +1,10 @@
 /*!
- * @file        rakl.h
+ * @file        artic.h
  * @brief       A kinematics library for articulated robot arm
  * @author      Chien-Pin Chen
  */
-#ifndef RA_RAKL_H_
-#define RA_RAKL_H_
+#ifndef RB_ARTIC_H_
+#define RB_ARTIC_H_
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -24,7 +24,7 @@ using Eigen::AngleAxisd;
 typedef Array<double, 6, 1> Array6d;
 
 
-namespace RA //! Robot Arm Library namespace
+namespace rb //! Robot Arm Library namespace
 {
     /*!
      * @enum IK_RESULT
@@ -39,11 +39,11 @@ namespace RA //! Robot Arm Library namespace
         IK_INPUT_INVALID    /*!< value 4 */
     };
 
-    /*! @struct ARM_POS     rakl.h
+    /*! @struct ArmPose     artic.h
      *  @brief  A struct variable for Tool Center Point (TCP)
-     *  ARM_POS storages the output of forward kinematic
+     *  ArmPose storages the output of forward kinematic
      */
-    struct ARM_POS
+    struct ArmPose
     {
         /*! Position of TCP (mm) */
         double x;
@@ -60,11 +60,11 @@ namespace RA //! Robot Arm Library namespace
     };
 
     /*!
-     *  @brief  Overload << operator to print position & orientation in  ARM_POS.
+     *  @brief  Overload << operator to print position & orientation in  ArmPose.
      *  @param  ost     ostream object to storage string for printing out.
-     *  @param  pose    ARM_POS object that will be printed out.
+     *  @param  pose    ArmPose object that will be printed out.
      */
-    std::ostream& operator<< (std::ostream& ost, const ARM_POS& pose);
+    std::ostream& operator<< (std::ostream& ost, const ArmPose& pose);
 
 #if __cplusplus == 201103L
     /*!
@@ -81,11 +81,12 @@ namespace RA //! Robot Arm Library namespace
     }
 #endif
 
-    /*! @struct ARM_AXIS_VALUE  rakl.h
+
+    /*! @struct ArmAxisValue  artic.h
      *  @brief  A struct variable for joints of robot arm
-     *  ARM_AXIS_VALUE storage the output of Inverse kinematic
+     *  ArmAxisValue storage the output of Inverse kinematic
      */
-    struct ARM_AXIS_VALUE
+    struct ArmAxisValue
     {
         /*! Joints Angle of 8 solutions*/
         MatrixXd axis_value;
@@ -95,7 +96,7 @@ namespace RA //! Robot Arm Library namespace
         std::array<bool, 8> singular_check = {{0}};     //!< check if in singular point.
         std::array<bool, 8> limit_check = {{0}};        //!< check if over angle limit.
 
-        ARM_AXIS_VALUE()
+        ArmAxisValue()
         {
             axis_value = MatrixXd::Constant(8, 6, 0.0);
             fit = 0;
@@ -107,18 +108,18 @@ namespace RA //! Robot Arm Library namespace
     };
 
 
-// Class of kinematics of 6-axis robot arm
-/*! @class rakl     rakl.h
+// Class of kinematics of articulated (6-axis) robot arm
+/*! @class Artic     artic.h
  *  @brief A kinematics class
- *  rakl implement the kinematics of 6-axis (articulated) robot arm
+ *  Artic implement the kinematics of articulated (6-axis) robot arm
  */
-class rakl
+class Artic
 {
 public:
-    rakl();         //!< Default Constructor
+    Artic();         //!< Default Constructor
 
     /*! Constructor with certain robot arm data. */
-    rakl(
+    Artic(
         const Array6d& a0,              //!< Link length of all links (mm)
         const Array6d& alpha0,          //!< Twist angle of all links (degree)
         const Array6d& d0,              //!< Link offset of all links (mm)
@@ -126,15 +127,15 @@ public:
         const Array6d& uplimit0,        //!< Upper limit of all joints
         const Array6d& lowlimit0        //!< Lower limit of all joints
         );
-    ~rakl();        //!< Destructor
+    ~Artic();        //!< Destructor
 
     /*!
      * @brief Compute forward Kinematics for given angle, update each joint
      *  value, and return current current position and orientation of TCP.
      * @param q         An array of joint degree.
-     * @return ARM_POS  a structure include position and orientation of TCP.
+     * @return ArmPose  a structure include position and orientation of TCP.
      */
-    ARM_POS forwardKin(const Array6d& q);
+    ArmPose forwardKin(const Array6d& q);
 
     /*!
      * @brief Compute inverse kinematics for given position and orientation in
@@ -149,7 +150,7 @@ public:
             const double& pitch,        //!< pitch value of the orientation.
             const double& yaw,          //!< yaw value of the orientation.
             Array6d& joints,            //!< the best fittest IK solution.
-            ARM_AXIS_VALUE& all_sols    //!< a data structure to store all possible solutions.
+            ArmAxisValue& all_sols      //!< a data structure to store all possible solutions.
             );
 
     /*!
@@ -163,7 +164,7 @@ public:
      */
     void solvePitchPitchIK(const double& th1_rad, const Eigen::Vector4d& p0,
                            const std::vector<bool>& config,
-                           ARM_AXIS_VALUE& all_sols);
+                           ArmAxisValue& all_sols);
 
     /*!
      * @brief Compute inverse kinematics for wrist mechanism (row-pitch-row) structure
@@ -175,13 +176,13 @@ public:
      */
     void solveRowPitchRowIK(const double& th1_rad, const std::vector<bool>& config,
                             const Matrix4d& flange_tr,
-                            ARM_AXIS_VALUE& all_sols);
+                            ArmAxisValue& all_sols);
 
     /*!
      * @brief Find the solutions in all_sols that is most fit to previous joints value
-     * @param all_sols a structure to storage all possible solutions of inverse kinematics.
+     * @param sols a structure to storage all possible solutions of inverse kinematics.
      */
-    IK_RESULT solutionCheck(ARM_AXIS_VALUE& sols);
+    IK_RESULT solutionCheck(ArmAxisValue& sols);
 
     /*!
      * @brief Compute homogeneous transformation matrix for given link properties,
@@ -192,13 +193,13 @@ public:
      * @param theta     Given joint angle.
      * @return  Homogeneous transformation matrix of given link properties.
      */
-    Matrix4d Homo_trans(double& A, double& alpha, double& D, const double& theta);
+    Matrix4d homoTrans(double& A, double& alpha, double& D, const double& theta);
 
     /*!
      * @brief Get the position and orientation of the robot arm.
-     * @return  ARM_POS
+     * @return  ArmPose
      */
-    ARM_POS getArmPos(void);
+    ArmPose getArmPos(void);
 
     /*!
      * @brief Set the HT matrix of the offset b/w the arm flange and
@@ -206,11 +207,11 @@ public:
      * @param tool_offset
      * @return bool     Check if setting success
      */
-    bool setToolOffset(ARM_POS tool_offset);
+    bool setToolOffset(const ArmPose& tool_offset);
 
     /*!
-     * @brief Set the HT matrix of the working base of the robot arm.
-     * @param   Matrix4d
+     * @brief Set the Homogeneous Transformation matrix of the working base of the robot arm.
+     * @param base  a Homogeneous Transformation matrix from World -> the robot base.
      * @return
      */
     void setBase(Matrix4d& base);
@@ -247,7 +248,7 @@ public:
 
     /*!
      * @brief Set the upper limits of joint angles for the robot arm.
-     * @param Array6d
+     * @param up_lim    An Array6d contain the upper limit of all joints.
      */
     void setUpLimit(Array6d& up_lim);
 
@@ -259,7 +260,7 @@ public:
 
     /*!
      * @brief Set the lower limits of joint angles for the robot arm.
-     * @param Array6d
+     * @param low_lim   An Array6d contain the lower limit of all joints.
      */
     void setLowLimit(Array6d& low_lim);
 
@@ -289,7 +290,7 @@ private:
     Array6d m_pre_theta;            //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
     Matrix4d m_T_act;               //!< HT matrix of TCP with respected to work base
     Matrix4d m_tool_T;              //!< HT matrix of TCP with respected to 6th joint (last joint coordination)
-    ARM_POS m_pos_act;              //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
+    ArmPose m_pos_act;              //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
     int pre_fit_solution;           //!< The index of configuration of previous IK
 
     // private functions
@@ -301,5 +302,5 @@ private:
     Matrix4d rotateZ(const double& deg);
 };
 
-}       // namespace RA
-#endif  // RA_RAKL_H_
+}       // namespace rb
+#endif  // RB_ARTIC_H_

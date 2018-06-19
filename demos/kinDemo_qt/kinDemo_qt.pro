@@ -27,16 +27,16 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         kindemo.cpp\
-        ../../src/rakl.cpp
+        ../../src/artic.cpp
 
 HEADERS += \
         kindemo.h \
-        ../../src/rakl.h
+        ../../src/artic.h
 
 FORMS += \
         kindemo.ui
 
-#LIBS += -L"$$_PRO_FILE_PWD_/libs/" -lrakl
+#LIBS += -L"$$_PRO_FILE_PWD_/libs/" -lartic
 
 INCLUDEPATH += "/usr/local/include/eigen3/" \
                 "../../src/"

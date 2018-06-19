@@ -8,7 +8,7 @@ kinDemo::kinDemo(QWidget *parent) :
     ui->setupUi(this);
 
     // initial a robot object first
-    robot = std::unique_ptr<RA::rakl> {new RA::rakl};
+    robot = std::unique_ptr<rb::Artic> {new rb::Artic};
 
     // Initailize DH-table table widget
     ui->dhTableWidget->setColumnCount(6);
@@ -38,7 +38,7 @@ kinDemo::~kinDemo()
 
 void kinDemo::OnBtnClickInit()
 {
-    robot = std::unique_ptr<RA::rakl> {new RA::rakl};
+    robot = std::unique_ptr<rb::Artic> {new rb::Artic};
 
     // get DH paramter
     Array6d a0 = robot->getA();
@@ -122,28 +122,28 @@ void kinDemo::OnBtnClickIK()
     double yaw = get_str.toDouble();
 
     Array6d q;
-    RA::IK_RESULT check = robot->inverseKin(px, py, pz, row, pitch,
+    rb::IK_RESULT check = robot->inverseKin(px, py, pz, row, pitch,
                                             yaw, q, joint_value);
 
     switch(check)
     {
-    case RA::IK_RESULT::IK_COMPLETE:
+    case rb::IK_RESULT::IK_COMPLETE:
         get_str = "Find Solutions.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case RA::IK_RESULT::IK_NO_SOLUTION:
+    case rb::IK_RESULT::IK_NO_SOLUTION:
         get_str = "No Solution.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case RA::IK_RESULT::IK_ANGLE_LIMIT:
+    case rb::IK_RESULT::IK_ANGLE_LIMIT:
         get_str = "Joint Limit.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case RA::IK_RESULT::IK_SINGULAR:
+    case rb::IK_RESULT::IK_SINGULAR:
         get_str = "Singular Point Reach!.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case RA::IK_RESULT::IK_INPUT_INVALID:
+    case rb::IK_RESULT::IK_INPUT_INVALID:
         get_str = "Input Invalid!.";
         ui->solCheckLabel->setText(get_str);
         break;
@@ -203,7 +203,7 @@ void kinDemo::OnBtnClickReset()
         low0[i] = get_str.toDouble();
     }
 
-    robot = std::unique_ptr<RA::rakl> {new RA::rakl(a0, alpha0, d0,
+    robot = std::unique_ptr<rb::Artic> {new rb::Artic(a0, alpha0, d0,
                                                     th0, up0, low0)};
 
     return;

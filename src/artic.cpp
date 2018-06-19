@@ -1,9 +1,9 @@
 /*--------------------------------------------------------------------------------
- * rakl.cpp
+ * artic.cpp
  * Author             Chien-Pin Chen,
  * Description        General robot arm Kinematic application
  *--------------------------------------------------------------------------------*/
-#include "rakl.h"
+#include "artic.h"
 
 #include <algorithm>
 
@@ -13,10 +13,10 @@
 #define D2R  0.01745329251994329576923690768489 //!< constant to present  converting from degree to radius
 
 
-namespace RA
+namespace rb
 {
 
-std::ostream& operator<< (std::ostream& ost, const ARM_POS& pose)
+std::ostream& operator<< (std::ostream& ost, const ArmPose& pose)
 {
 #if __cplusplus >= 201402L
     auto ostrVec = [](std::ostream& ost , auto vec_inp, int width=12){   // use lambda to handle
@@ -34,7 +34,7 @@ std::ostream& operator<< (std::ostream& ost, const ARM_POS& pose)
 }
 
 /* ----------- Robot Arm Kinematics Library --------------*/
-rakl::rakl()
+Artic::Artic()
 {
     /* Initialize */
     m_ini_theta = Array6d::Constant(0.0);
@@ -68,12 +68,12 @@ rakl::rakl()
     }
 
     //Matrix4d T1, T2, T3, T4, T5, T6;
-    Matrix4d T1 = Homo_trans(a[0], alpha[0], d[0], m_ini_theta[0]); // A01
-    Matrix4d T2 = Homo_trans(a[1], alpha[1], d[1], m_ini_theta[1]); // A12
-    Matrix4d T3 = Homo_trans(a[2], alpha[2], d[2], m_ini_theta[2]); // A23
-    Matrix4d T4 = Homo_trans(a[3], alpha[3], d[3], m_ini_theta[3]); // A34
-    Matrix4d T5 = Homo_trans(a[4], alpha[4], d[4], m_ini_theta[4]); // A45
-    Matrix4d T6 = Homo_trans(a[5], alpha[5], d[5], m_ini_theta[5]); // A56
+    Matrix4d T1 = homoTrans(a[0], alpha[0], d[0], m_ini_theta[0]); // A01
+    Matrix4d T2 = homoTrans(a[1], alpha[1], d[1], m_ini_theta[1]); // A12
+    Matrix4d T3 = homoTrans(a[2], alpha[2], d[2], m_ini_theta[2]); // A23
+    Matrix4d T4 = homoTrans(a[3], alpha[3], d[3], m_ini_theta[3]); // A34
+    Matrix4d T5 = homoTrans(a[4], alpha[4], d[4], m_ini_theta[4]); // A45
+    Matrix4d T6 = homoTrans(a[5], alpha[5], d[5], m_ini_theta[5]); // A56
 
     //Matrix4d T12, T13, T14, T15, T16;
     Matrix4d T12 = T1 * T2;             // A02 = A01 * A12
@@ -103,7 +103,7 @@ rakl::rakl()
     m_pos_act.T[6] = work_base;
 }
 
-rakl::rakl(
+Artic::Artic(
         const Array6d& a0,
         const Array6d& alpha0,
         const Array6d& d0,
@@ -142,12 +142,12 @@ rakl::rakl(
     }
 
     //Matrix4d T1, T2, T3, T4, T5, T6;
-    Matrix4d T1 = Homo_trans(a[0], alpha[0], d[0], m_ini_theta[0]); // A01
-    Matrix4d T2 = Homo_trans(a[1], alpha[1], d[1], m_ini_theta[1]); // A12
-    Matrix4d T3 = Homo_trans(a[2], alpha[2], d[2], m_ini_theta[2]); // A23
-    Matrix4d T4 = Homo_trans(a[3], alpha[3], d[3], m_ini_theta[3]); // A34
-    Matrix4d T5 = Homo_trans(a[4], alpha[4], d[4], m_ini_theta[4]); // A45
-    Matrix4d T6 = Homo_trans(a[5], alpha[5], d[5], m_ini_theta[5]); // A56
+    Matrix4d T1 = homoTrans(a[0], alpha[0], d[0], m_ini_theta[0]); // A01
+    Matrix4d T2 = homoTrans(a[1], alpha[1], d[1], m_ini_theta[1]); // A12
+    Matrix4d T3 = homoTrans(a[2], alpha[2], d[2], m_ini_theta[2]); // A23
+    Matrix4d T4 = homoTrans(a[3], alpha[3], d[3], m_ini_theta[3]); // A34
+    Matrix4d T5 = homoTrans(a[4], alpha[4], d[4], m_ini_theta[4]); // A45
+    Matrix4d T6 = homoTrans(a[5], alpha[5], d[5], m_ini_theta[5]); // A56
 
     //Matrix4d T12, T13, T14, T15, T16;
     Matrix4d T12 = T1 * T2;             // A02 = A01 * A12
@@ -178,10 +178,10 @@ rakl::rakl(
 }
 
 /* Destructor */
-rakl::~rakl(){}
+Artic::~Artic(){}
 
 /* Forward Kinematics */
-ARM_POS rakl::forwardKin(const Array6d& q)
+ArmPose Artic::forwardKin(const Array6d& q)
 {
     // storage input angles as previous angles for finding best solution in IK
     m_pre_theta = q;
@@ -189,7 +189,7 @@ ARM_POS rakl::forwardKin(const Array6d& q)
     // calculate homogeneous matrix for each joint
     Eigen::Array<Matrix4d, 6, 1> T;
     for(int i=0; i < q.size(); ++i)
-        T[i] = Homo_trans(a[i], alpha[i], d[i], q[i]);
+        T[i] = homoTrans(a[i], alpha[i], d[i], q[i]);
 
     //Matrix4d T12, T13, T14, T15, T16;
     Matrix4d T12 = T[0] * T[1];             // A02 = A01 * A12
@@ -223,9 +223,9 @@ ARM_POS rakl::forwardKin(const Array6d& q)
 }
 
 /* Inverse Kinematics */
-IK_RESULT rakl::inverseKin(const double& x, const double& y, const double& z,
+IK_RESULT Artic::inverseKin(const double& x, const double& y, const double& z,
         const double& roll, const double& pitch, const double& yaw,
-        Array6d& joints, ARM_AXIS_VALUE& all_sols)
+        Array6d& joints, ArmAxisValue& all_sols)
 {
     // reset all possible (8) solutions
     all_sols.axis_value = MatrixXd::Constant(8, 6, 0.0);
@@ -351,9 +351,9 @@ IK_RESULT rakl::inverseKin(const double& x, const double& y, const double& z,
     return check;
 }
 
-void rakl::solvePitchPitchIK(const double& th1, const Eigen::Vector4d& p0,
+void Artic::solvePitchPitchIK(const double& th1, const Eigen::Vector4d& p0,
                              const std::vector<bool>& config,
-                             ARM_AXIS_VALUE& all_sols)
+                             ArmAxisValue& all_sols)
 {
     double a1 = this->a[1], a2 = this->a[2], a3 = this->a[3];
     double d0 = this->d[0], d3 = this->d[3];
@@ -414,16 +414,16 @@ void rakl::solvePitchPitchIK(const double& th1, const Eigen::Vector4d& p0,
     return;
 }
 
-void rakl::solveRowPitchRowIK(const double& th1, const std::vector<bool>& config,
+void Artic::solveRowPitchRowIK(const double& th1, const std::vector<bool>& config,
                               const Matrix4d& flange_tr,
-                              ARM_AXIS_VALUE& all_sols)
+                              ArmAxisValue& all_sols)
 {
     double config_start = config[0]*4 + config[1]*2;
     double th2up_rad = all_sols.axis_value( config_start, 1);
     double th3up_rad = all_sols.axis_value( config_start, 2);
-    Matrix4d tr01 = Homo_trans(a[0], alpha[0], d[0], th1 * R2D);
-    Matrix4d tr12 = Homo_trans(a[1], alpha[1], d[1], th2up_rad * R2D);
-    Matrix4d tr23 = Homo_trans(a[2], alpha[2], d[2], th3up_rad * R2D);
+    Matrix4d tr01 = homoTrans(a[0], alpha[0], d[0], th1 * R2D);
+    Matrix4d tr12 = homoTrans(a[1], alpha[1], d[1], th2up_rad * R2D);
+    Matrix4d tr23 = homoTrans(a[2], alpha[2], d[2], th3up_rad * R2D);
     Matrix4d tr03 = tr01 * tr12 * tr23;
     //Matrix4d tr03_inv =tr03.inverse();
     Matrix4d tr36 = tr03.inverse() * flange_tr;
@@ -483,7 +483,7 @@ void rakl::solveRowPitchRowIK(const double& th1, const std::vector<bool>& config
     return;
 }
 
-IK_RESULT rakl::solutionCheck(ARM_AXIS_VALUE& sols)
+IK_RESULT Artic::solutionCheck(ArmAxisValue& sols)
 {
     // First initial result as complete (find a fit solution
     IK_RESULT check = IK_RESULT::IK_COMPLETE;
@@ -518,7 +518,7 @@ IK_RESULT rakl::solutionCheck(ARM_AXIS_VALUE& sols)
             sols.solution_check.begin()+4, [](bool i){return i==false;});
     bool check_back4 = std::all_of(sols.solution_check.begin()+4,
             sols.solution_check.end(), [](bool i){return i==false;});
-    // TODO: add functions to check if readh joint limits.
+    // TODO: add functions to check if reach joint limits.
 
     // using cosine similarity to check which solutions is most closest to previous step join value
     sols.fit = 0;
@@ -556,13 +556,13 @@ IK_RESULT rakl::solutionCheck(ARM_AXIS_VALUE& sols)
     return check;
 }
 
-ARM_POS rakl::getArmPos(void)
+ArmPose Artic::getArmPos(void)
 {
     return this->m_pos_act;
 }
 
 
-bool rakl::setToolOffset(ARM_POS tool_offset)
+bool Artic::setToolOffset(const ArmPose& tool_offset)
 {
     double roll = D2R * tool_offset.a;
     double pitch = D2R * tool_offset.b;
@@ -571,61 +571,61 @@ bool rakl::setToolOffset(ARM_POS tool_offset)
     // compute rpy matrix and assign it to offset matrix of the tool.
     rpy2tr(roll, pitch, yaw, this->m_tool_T);
     this->m_tool_T(0,3) = tool_offset.x;
-    this->m_tool_T(1,3) = tool_offset.x;
-    this->m_tool_T(2,3) = tool_offset.x;
+    this->m_tool_T(1,3) = tool_offset.y;
+    this->m_tool_T(2,3) = tool_offset.z;
 
     return true;
 }
 
-void rakl::setBase(Matrix4d& base)
+void Artic::setBase(Matrix4d& base)
 {
     this->work_base_T = base;
     return;
 }
 
-Matrix4d rakl::getBase(void)
+Matrix4d Artic::getBase(void)
 {
     return this->work_base_T;
 }
 
-Array6d rakl::getA(void)
+Array6d Artic::getA(void)
 {
     return this->a;
 }
 
-Array6d rakl::getAlpha(void)
+Array6d Artic::getAlpha(void)
 {
     return this->alpha;
 }
 
-Array6d rakl::getD(void)
+Array6d Artic::getD(void)
 {
     return this->d;
 }
 
-Array6d rakl::getTheta(void)
+Array6d Artic::getTheta(void)
 {
     return this->theta;
 }
 
-void rakl::setUpLimit(Array6d& up_lim)
+void Artic::setUpLimit(Array6d& up_lim)
 {
    this->uplimit = up_lim;
    return;
 }
 
-Array6d rakl::getUpLimit(void)
+Array6d Artic::getUpLimit(void)
 {
     return this->uplimit;
 }
 
-void rakl::setLowLimit(Array6d& low_lim)
+void Artic::setLowLimit(Array6d& low_lim)
 {
    this->lowlimit = low_lim;
    return;
 }
 
-Array6d rakl::getLowLimit(void)
+Array6d Artic::getLowLimit(void)
 {
     return this->lowlimit;
 }
@@ -636,7 +636,7 @@ Array6d rakl::getLowLimit(void)
 * A function to build homogeneous transformation matrix for each link.
 * \return Matrix4d
 */
-Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, const double& theta)
+Matrix4d Artic::homoTrans(double& A, double& alpha, double& D, const double& theta)
 {
     double ct = cos(D2R * theta);
     double st = sin(D2R * theta);
@@ -657,7 +657,7 @@ Matrix4d rakl::Homo_trans(double& A, double& alpha, double& D, const double& the
 * A function to get roll, pitch, yaw from rotation matrix
 * \return N/A
 */
-void rakl::tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& yaw_x)
+void Artic::tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& yaw_x)
 {
     double eps=2.22044604925031e-5;
     if(fabs(m(0,0)) < eps && fabs(m(1,0)) < eps)
@@ -683,7 +683,7 @@ void rakl::tr2rpy(const Matrix4d& m, double& roll_z, double& pitch_y, double& ya
 * A function to get roll, pitch, yaw from rotation matrix
 * \return N/A
 */
-void rakl::rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, Matrix4d& tool_mat)
+void Artic::rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, Matrix4d& tool_mat)
 {
     Matrix4d mat_z = rotateZ(roll_z);
     Matrix4d mat_y = rotateY(pitch_y);
@@ -693,7 +693,7 @@ void rakl::rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, Matrix4d& tool
 }
 
 
-Matrix4d rakl::rotateX(const double& deg)
+Matrix4d Artic::rotateX(const double& deg)
 {
     Matrix3d m33;
     m33 = AngleAxisd(deg * D2R, Vector3d::UnitX());
@@ -704,7 +704,7 @@ Matrix4d rakl::rotateX(const double& deg)
 }
 
 
-Matrix4d rakl::rotateY(const double& deg)
+Matrix4d Artic::rotateY(const double& deg)
 {
     Matrix3d m33;
     m33 = AngleAxisd(deg * D2R, Vector3d::UnitY());
@@ -713,7 +713,7 @@ Matrix4d rakl::rotateY(const double& deg)
     return matrix;
 }
 
-Matrix4d rakl::rotateZ(const double& deg)
+Matrix4d Artic::rotateZ(const double& deg)
 {
     Matrix3d m33;
     m33 = AngleAxisd(deg * D2R, Vector3d::UnitZ());
@@ -722,4 +722,4 @@ Matrix4d rakl::rotateZ(const double& deg)
     return matrix;
 }
 
-}   // namespace RA
+}   // namespace rb
