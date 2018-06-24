@@ -24,7 +24,7 @@ int main(void)
     std::cout << mPos << '\n';
 
     // Test Forward Kinematics
-    Array6d qIn;
+    rb::math::Array6 qIn;
     qIn << 45. , -90 , 45. , 0  , 90. , 0;    // turn 1st joint 45 deg and 5th 90 deg.
     mPos = robot->forwardKin(qIn);
     std::cout << "\n\nUpdate position of TCP:\n";
@@ -32,7 +32,7 @@ int main(void)
     std::cout << mPos << "\n\n";
 
     // Test Inverse Kinematics
-    Array6d joints;
+    rb::math::Array6 joints;
     ArmAxisValue all_sols;
     IK_RESULT idx = robot->inverseKin(205.533,-205.533,403.475,
                                          -45.,     45.,   180.,
