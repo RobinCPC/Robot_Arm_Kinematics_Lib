@@ -27,11 +27,11 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         kindemo.cpp\
-        ../../src/artic.cpp
+        ../../src/kin/artic.cpp
 
 HEADERS += \
         kindemo.h \
-        ../../src/artic.h
+        ../../src/kin/artic.h
 
 FORMS += \
         kindemo.ui

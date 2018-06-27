@@ -11,11 +11,13 @@
 #include <vector>
 #include <array>
 
-#include "math/matrix.h"
+#include "../math/matrix.h"
 
 
 namespace rb //! Robot Arm Library namespace
 {
+    namespace kin //! Kinematics module namespace
+    {
     /*!
      * @enum IK_RESULT
      * A set of enumeration to present the result of inverse kinematics (IK)
@@ -299,6 +301,6 @@ private:
     rb::math::Matrix4 rotateY(const double& deg);
     rb::math::Matrix4 rotateZ(const double& deg);
 };
-
+    }   // namespace kin
 }       // namespace rb
 #endif  // RB_ARTIC_H_

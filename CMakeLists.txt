@@ -3,11 +3,15 @@ project(RobotArmLib)
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
 set(VERSION_MINOR   0   CACHE STRING "Project minor version number.")
-set(VERSION_PATCH   2   CACHE STRING "Project patch version number.")
+set(VERSION_PATCH   3   CACHE STRING "Project patch version number.")
 
 set(CMAKE_CXX_STANDARD 11)
 #set(CXX_FLAGS "-g -Wall -Wextra")
 #set(CMAKE_CXX_FLAGS ${CXX_FLAGS})
+
+# check CMAKE flag for compiling
+message("CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
+message("CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 
 #find extra library (Eigen3) or add diretory
 find_package(Eigen3)     #REQUIRED
@@ -24,8 +28,8 @@ endif(EIGEN3_FOUND)
 
 # build artic library
 add_library(artic SHARED
-    src/artic.cpp
-    src/artic.h
+    src/kin/artic.cpp
+    src/kin/artic.h
     )
 if(EIGEN3_FOUND)
     target_link_libraries(artic Eigen3::Eigen)

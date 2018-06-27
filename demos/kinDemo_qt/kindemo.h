@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include <artic.h>
+#include <kin/artic.h>
 
 namespace Ui {
 class kinDemo;
@@ -30,10 +30,9 @@ private slots:
 
 private:
     Ui::kinDemo *ui;
-    //rb::Artic* robot;
-    std::unique_ptr<rb::Artic> robot;
-    rb::ArmPose pose_tcp;
-    rb::ArmAxisValue joint_value;
+    std::unique_ptr<rb::kin::Artic> robot;
+    rb::kin::ArmPose pose_tcp;
+    rb::kin::ArmAxisValue joint_value;
 };
 
 #endif // KINDEMO_H

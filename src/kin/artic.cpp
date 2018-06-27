@@ -4,7 +4,7 @@
  * Description        General robot arm Kinematic application
  *--------------------------------------------------------------------------------*/
 #include "artic.h"
-#include "math/unit.h"
+#include "../math/unit.h"
 
 #include <algorithm>
 #include <cmath>
@@ -12,10 +12,13 @@
 
 namespace rb
 {
+namespace kin
+{
 
 using rb::math::RAD2DEG;
 using rb::math::DEG2RAD;
 using rb::math::PI;
+//static const double PI = static_cast<double>(M_PI);   // using M_PI in cmath
 
 using rb::math::Array;
 using rb::math::Array6;
@@ -756,5 +759,5 @@ Matrix4 Artic::rotateZ(const double& deg)
     matrix.topLeftCorner(3,3) << m33;
     return matrix;
 }
-
+}
 }   // namespace rb

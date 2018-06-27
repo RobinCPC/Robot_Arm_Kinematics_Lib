@@ -10,7 +10,7 @@ kinDemo::kinDemo(QWidget *parent) :
     ui->setupUi(this);
 
     // initial a robot object first
-    robot = std::unique_ptr<rb::Artic> {new rb::Artic};
+    robot = std::unique_ptr<rb::kin::Artic> {new rb::kin::Artic};
 
     // Initailize DH-table table widget
     ui->dhTableWidget->setColumnCount(6);
@@ -40,7 +40,7 @@ kinDemo::~kinDemo()
 
 void kinDemo::OnBtnClickInit()
 {
-    robot = std::unique_ptr<rb::Artic> {new rb::Artic};
+    robot = std::unique_ptr<rb::kin::Artic> {new rb::kin::Artic};
 
     // get DH paramter
     Array6 a0 = robot->getA();
@@ -124,28 +124,28 @@ void kinDemo::OnBtnClickIK()
     double yaw = get_str.toDouble();
 
     Array6 q;
-    rb::IK_RESULT check = robot->inverseKin(px, py, pz, row, pitch,
+    rb::kin::IK_RESULT check = robot->inverseKin(px, py, pz, row, pitch,
                                             yaw, q, joint_value);
 
     switch(check)
     {
-    case rb::IK_RESULT::IK_COMPLETE:
+    case rb::kin::IK_RESULT::IK_COMPLETE:
         get_str = "Find Solutions.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case rb::IK_RESULT::IK_NO_SOLUTION:
+    case rb::kin::IK_RESULT::IK_NO_SOLUTION:
         get_str = "No Solution.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case rb::IK_RESULT::IK_ANGLE_LIMIT:
+    case rb::kin::IK_RESULT::IK_ANGLE_LIMIT:
         get_str = "Joint Limit.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case rb::IK_RESULT::IK_SINGULAR:
+    case rb::kin::IK_RESULT::IK_SINGULAR:
         get_str = "Singular Point Reach!.";
         ui->solCheckLabel->setText(get_str);
         break;
-    case rb::IK_RESULT::IK_INPUT_INVALID:
+    case rb::kin::IK_RESULT::IK_INPUT_INVALID:
         get_str = "Input Invalid!.";
         ui->solCheckLabel->setText(get_str);
         break;
@@ -205,8 +205,8 @@ void kinDemo::OnBtnClickReset()
         low0[i] = get_str.toDouble();
     }
 
-    robot = std::unique_ptr<rb::Artic> {new rb::Artic(a0, alpha0, d0,
-                                                    th0, up0, low0)};
+    robot = std::unique_ptr<rb::kin::Artic> {new rb::kin::Artic(a0, alpha0, d0,
+                                                           th0, up0, low0)};
 
     return;
 }

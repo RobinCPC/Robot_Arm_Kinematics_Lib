@@ -2,9 +2,9 @@
 #include <memory>
 #include <chrono>
 
-#include "../src/artic.h"
+#include "../src/kin/artic.h"
 
-using namespace rb;
+using namespace rb::kin;
 
 // TODO: Use smart_ptr to declare robot and use chrono to
 // check computing time of FK and IK.
