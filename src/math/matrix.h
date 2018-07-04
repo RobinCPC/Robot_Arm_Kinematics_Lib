@@ -6,6 +6,7 @@
 
 #ifndef RB_MATRIX_H_
 #define RB_MATRIX_H_
+#include "unit.h"
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -29,6 +30,30 @@ namespace rb    //! Robot Arm Library namespace
 
         //! make Array6 as alias of Eigen::Array<double, 6, 1>
         typedef Eigen::Array<double, 6, 1> Array6;
+
+        /*!
+         * @brief Compute homogeneous transformation matrix for given link properties,
+         *   and return the matrix.
+         * @param A         Given link length.
+         * @param alpha     Given link twist.
+         * @param D         Given link offset.
+         * @param theta     Given joint angle.
+         * @return  Homogeneous transformation matrix of given link properties.
+         */
+        inline Matrix4 homoTrans(const double& A, const double& alpha, const double& D, const double theta)
+        {
+            double ct = cos(DEG2RAD * theta);
+            double st = sin(DEG2RAD * theta);
+            double ca = cos(DEG2RAD * alpha);
+            double sa = sin(DEG2RAD * alpha);
+
+            Matrix4 T;
+            T << ct,   -st,   0,     A,
+              st*ca, ct*ca, -sa, -sa*D,
+              st*sa, ct*sa,  ca,  ca*D,
+                  0,     0,   0,     1;
+            return T;
+        }
     }
 }
 

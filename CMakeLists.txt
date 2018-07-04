@@ -38,7 +38,11 @@ else(EIGEN3_FOUND)
 endif(EIGEN3_FOUND)
 
 #build test run exec
-add_executable(test_run test/test_run.cpp)
+add_executable(test_run
+    test/test_run.cpp
+    src/kin/link.cpp
+    src/kin/link.h
+    )
 target_link_libraries(test_run artic)
 
 # install test run in ./bin
