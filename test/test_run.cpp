@@ -7,8 +7,24 @@
 
 using namespace rb::kin;
 
-// TODO: Use smart_ptr to declare robot and use chrono to
-// check computing time of FK and IK.
+struct Timer
+{
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    std::chrono::duration<double> time_step;
+    Timer()
+    {
+        start = std::chrono::high_resolution_clock::now();
+    }
+
+    ~Timer()
+    {
+        end = std::chrono::high_resolution_clock::now();
+        time_step = end - start;
+        double ns = time_step.count() * 1.0e+6f;
+        std::cout << "Timer took " << ns << " ns\n";
+    }
+};
+
 int main(void)
 {
 #if __cplusplus >= 201402L
@@ -29,7 +45,11 @@ int main(void)
     // Test Forward Kinematics
     rb::math::Array6 qIn;
     qIn << 45. , -90 , 45. , 0  , 90. , 0;    // turn 1st joint 45 deg and 5th 90 deg.
-    mPos = robot->forwardKin(qIn);
+    std::cout << "\nComputing time for Forward Kinematics of 6-axis robot arm: \n";
+    {
+        Timer timer;
+        mPos = robot->forwardKin(qIn);
+    }
     std::cout << "\n\nUpdate position of TCP:\n";
     std::cout << mPos.T[5] << "\n\n";
     std::cout << mPos << "\n\n";
@@ -37,9 +57,14 @@ int main(void)
     // Test Inverse Kinematics
     rb::math::Array6 joints;
     ArmAxisValue all_sols;
-    IK_RESULT idx = robot->inverseKin(205.533,-205.533,403.475,
-                                         -45.,     45.,   180.,
-                                      joints, all_sols);
+    IK_RESULT idx;
+    std::cout << "\nComputing time for solving Inverse Kinematics of 6-axis robot arm: \n";
+    {
+        Timer timer;
+        idx = robot->inverseKin(205.533,-205.533,403.475,
+                                   -45.,     45.,   180.,
+                                        joints, all_sols);
+    }
     std::cout << '\n' << idx << '\n';
     std::cout << "\n The most fit solution: " << all_sols.fit << '\n';
     std::cout << "\n axis_value:\n" << all_sols.axis_value.transpose() << '\n';
