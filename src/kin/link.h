@@ -4,10 +4,10 @@
  * @author      Chien-Pin Chen
  */
 
-#include "../math/matrix.h"
-
 #ifndef RB_LINK_H_
 #define RB_LINK_H_
+
+#include "../math/matrix.h"
 
 namespace rb //! Robot Arm Library namespace
 {
