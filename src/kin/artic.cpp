@@ -18,7 +18,6 @@ namespace kin
 using rb::math::RAD2DEG;
 using rb::math::DEG2RAD;
 using rb::math::PI;
-//static const double PI = static_cast<double>(M_PI);   // using M_PI in cmath
 
 using rb::math::Array;
 using rb::math::Array6;
@@ -54,7 +53,6 @@ Artic::Artic()
     m_pre_theta = Array6::Constant(0.0);
 
     m_T_act = Matrix4::Constant(0.0);
-    m_tool_T = Matrix4::Constant(0.0);
 
     pre_fit_solution = 9;
 
@@ -95,7 +93,7 @@ Artic::Artic()
     Matrix4 T15 = T14 * T5;
     Matrix4 T16 = T15 * T6;
     m_T_act = T16 * m_tool_T;           // m_T_act is Tool center point HT Matrix
-    work_base = m_T_act * work_base_T;  // get TCP in work base coordination
+    work_base = work_base_T * m_T_act;  // get TCP in work base coordination
 
     /* calculate xyzabc */
     m_pos_act.x = work_base(0,3);
@@ -129,7 +127,6 @@ Artic::Artic(
     m_pre_theta = Array6::Constant(0.0);
 
     m_T_act = Matrix4::Constant(0.0);
-    m_tool_T = Matrix4::Constant(0.0);
 
     pre_fit_solution = 9;
 
@@ -169,7 +166,7 @@ Artic::Artic(
     Matrix4 T15 = T14 * T5;
     Matrix4 T16 = T15 * T6;
     m_T_act = T16 * m_tool_T;           // m_T_act is Tool center point HT Matrix
-    work_base = m_T_act * work_base_T;  // get TCP in work base coordination
+    work_base = work_base_T * m_T_act;  // get TCP in work base coordination
 
     /* calculate xyzabc */
     m_pos_act.x = work_base(0,3);
@@ -311,8 +308,10 @@ IK_RESULT Artic::inverseKin(const double& x, const double& y, const double& z,
     /*solve joint 1st backward solution 5-8*/
     config = {1, 0, 0};
     double theta1_b = theta1 + PI;
-    if(theta1_b >= 2*PI)
-        theta1_b = theta1_b - 2*PI;
+    // precheck 1st joint value
+    preCheck(1, theta1_b);
+    //if(theta1_b >= 2*PI)
+    //    theta1_b = theta1_b - 2*PI;
 
     for(int i=4; i<8; ++i)
         all_sols.axis_value(i, 0) = theta1_b;
@@ -337,7 +336,9 @@ IK_RESULT Artic::inverseKin(const double& x, const double& y, const double& z,
     if( check != IK_RESULT::IK_COMPLETE)
     {
         // IK fail. return IK result, but not update joint values
+#ifndef NDEBUG
         std::cout << "No Solution!!\n";
+#endif
         return check;
     }
 
@@ -379,7 +380,9 @@ void Artic::solvePitchPitchIK(const double& th1, const rb::math::Vector4& p0,
     // check if has real solution
     if (ks < 0)
     {
+#ifndef NDEBUG
         printf("k1^2+k2^2-k3^2 < 0, solution %d-%d no real solution\n", config[0]*4+1, config[0]*4+4);
+#endif
         for (int i = 0 + config[0]*4 ; i < 4 + config[0]*4; ++i)
             all_sols.solution_check[i] = false;
     }else // has real solutions.
@@ -449,7 +452,9 @@ void Artic::solveRowPitchRowIK(const double& th1, const std::vector<bool>& confi
     // check if in singular point first
     if(fabs(tr36(0,2)) < eps && fabs(tr36(2, 2)) < eps)
     {
+#ifndef NDEBUG
         printf("Solution 1-2 Reach sigular position\n");
+#endif
         for(int i = config_start; i<config_start+2; ++i)
             all_sols.singular_check[i] = false;
 
@@ -522,7 +527,9 @@ IK_RESULT Artic::solutionCheck(ArmAxisValue& sols)
                     sols.axis_value(i, j) < lowlimit[j])
                 {
                     sols.limit_check[i] = false;
+#ifndef NDEBUG
                     printf ("Solution %d, Joint %d overlimit.\n", i+1, j+1 );
+#endif
                 }
             }
             if (sols.limit_check[i] == false)
@@ -556,7 +563,9 @@ IK_RESULT Artic::solutionCheck(ArmAxisValue& sols)
         sols.fit = iter_cosine - cosine_sim.begin();
     else
     {
-        printf("Note Comsine Similarity found no_solution!\n");
+#ifndef NDEBUG
+        printf("Note Cosine Similarity found no_solution!\n");
+#endif
         check = IK_RESULT::IK_NO_SOLUTION;
     }
 
@@ -584,7 +593,7 @@ void Artic::preCheck(const int& njoint, double& rad)
     {
         bool in_range = poss_deg[i] <= this->uplimit[idx] &&
                         poss_deg[i] >= this->lowlimit[idx];
-        bool is_closer = pow(poss_deg[i] - pre_theta, 2) <
+        bool is_closer = pow(poss_deg[i] - pre_theta, 2) <=
                          pow(poss_deg[0] - pre_theta, 2);
         if( in_range && is_closer)
         {
