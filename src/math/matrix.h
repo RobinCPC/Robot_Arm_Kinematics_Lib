@@ -19,6 +19,7 @@ typedef Eigen::MatrixXd MatrixX;        //!< make MatrixX as alias of Eigen::Mat
 typedef Eigen::Matrix3d Matrix3;        //!< make Matrix3 as alias of Eigen::Matrix3d
 typedef Eigen::Matrix4d Matrix4;        //!< make Matrix4 as alias of Eigen::Matrix4d
 
+typedef Eigen::VectorXd VectorX;        //!< make VectorX as alias of Eigen::VectorXd
 typedef Eigen::Vector3d Vector3;        //!< make Vector3 as alias of Eigen::Vector3d
 typedef Eigen::Vector4d Vector4;        //!< make Vector4 as alias of Eigen::Vector4d
 

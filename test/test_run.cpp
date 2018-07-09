@@ -55,7 +55,7 @@ int main(void)
   std::cout << mPos << "\n\n";
 
   // Test Inverse Kinematics
-  rb::math::Array6 joints;
+  rb::math::VectorX joints;
   ArmAxisValue all_sols;
   IK_RESULT idx;
   std::cout << "\nComputing time for solving Inverse Kinematics of 6-axis robot arm: \n";

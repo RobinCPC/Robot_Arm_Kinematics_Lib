@@ -26,12 +26,14 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        kindemo.cpp\
-        ../../src/kin/artic.cpp
+        kindemo.cpp \
+        ../../src/kin/artic.cpp \
+        ../../src/kin/kinematic_chain.cpp
 
 HEADERS += \
         kindemo.h \
-        ../../src/kin/artic.h
+        ../../src/kin/artic.h \
+        ../../src/kin/kinematic_chain.h
 
 FORMS += \
         kindemo.ui

@@ -30,6 +30,8 @@ endif(EIGEN3_FOUND)
 add_library(artic SHARED
     src/kin/artic.cpp
     src/kin/artic.h
+    src/kin/kinematic_chain.cpp
+    src/kin/kinematic_chain.h
     )
 if(EIGEN3_FOUND)
     target_link_libraries(artic Eigen3::Eigen)

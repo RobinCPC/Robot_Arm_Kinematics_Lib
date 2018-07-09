@@ -19,7 +19,7 @@ namespace kin //! Kinematics module namespace
  *  @brief A kinematics class for articulated (6-axis) robot arm
  *  Artic implement the kinematics of articulated (6-axis) robot arm
  */
-class Artic
+class Artic : public KinematicChain
 {
 public:
   /*! Default Constuctor */
@@ -27,12 +27,12 @@ public:
 
   /*! Constructor with certain robot arm data. */
   Artic(
-      const rb::math::Array6& a0,              //!< Link length of all links (mm)
-      const rb::math::Array6& alpha0,          //!< Twist angle of all links (degree)
-      const rb::math::Array6& d0,              //!< Link offset of all links (mm)
-      const rb::math::Array6& ini_theta,       //!< Initial value of all joint angles
-      const rb::math::Array6& uplimit0,        //!< Upper limit of all joints
-      const rb::math::Array6& lowlimit0        //!< Lower limit of all joints
+      const rb::math::VectorX& a0,              //!< Link length of all links (mm)
+      const rb::math::VectorX& alpha0,          //!< Twist angle of all links (degree)
+      const rb::math::VectorX& d0,              //!< Link offset of all links (mm)
+      const rb::math::VectorX& ini_theta,       //!< Initial value of all joint angles
+      const rb::math::VectorX& uplimit0,        //!< Upper limit of all joints
+      const rb::math::VectorX& lowlimit0        //!< Lower limit of all joints
       );
 
   /*! Destructor */
@@ -44,7 +44,7 @@ public:
    * @param q         An array of joint degree.
    * @return ArmPose  a structure include position and orientation of TCP.
    */
-  ArmPose forwardKin(const rb::math::Array6& q);
+  ArmPose forwardKin(const rb::math::VectorX& q);
 
   /*!
    * @brief Compute inverse kinematics for given position and orientation in
@@ -58,7 +58,7 @@ public:
       const double& roll,         //!< roll value of the orientation.
       const double& pitch,        //!< pitch value of the orientation.
       const double& yaw,          //!< yaw value of the orientation.
-      rb::math::Array6& joints,   //!< the best fittest IK solution.
+      rb::math::VectorX& joints,   //!< the best fittest IK solution.
       ArmAxisValue& all_sols      //!< a data structure to store all possible solutions.
       );
 
@@ -102,113 +102,77 @@ public:
   void preCheck(const int& njoint, double& rad);
 
   /*!
-   * @brief Compute homogeneous transformation matrix for given link properties,
-   *   and return the matrix.
-   * @param A         Given link length.
-   * @param alpha     Given link twist.
-   * @param D         Given link offset.
-   * @param theta     Given joint angle.
-   * @return  Homogeneous transformation matrix of given link properties.
-   */
-  rb::math::Matrix4 homoTrans(double& A, double& alpha, double& D, const double& theta);
-
-  /*!
-   * @brief Get the position and orientation of the robot arm.
+   * @brief Get the position and orientation of the flange of robot arm.
    * @return  ArmPose
    */
-  ArmPose getArmPose(void);
-
-  /*!
-   * @brief Set the HT matrix of the offset b/w the arm flange and
-   *        equipped tool or end-effector.
-   * @param tool_offset
-   * @return bool     Check if setting success
-   */
-  bool setToolOffset(const ArmPose& tool_offset);
-
-  /*!
-   * @brief Set the Homogeneous Transformation matrix of the working base of the robot arm.
-   * @param base  a Homogeneous Transformation matrix from World -> the robot base.
-   * @return
-   */
-  void setBase(rb::math::Matrix4& base);
-
-  /*!
-   * @brief Get the HT matrix of the working base of the robot arm.
-   * @return rb::math::Matrix4
-   */
-  rb::math::Matrix4 getBase(void);
+  ArmPose getArmPose(void) const;
 
   /*!
    * @brief Get the link length `a` value between each joint of the robot arm.
-   * @return rb::math::Array6
+   * @return rb::math::VectorX
    */
-  rb::math::Array6 getA(void);
+  rb::math::VectorX getA(void) const;
 
   /*!
    * @brief Get the link twist \f$\alpha\f$  value between each joint of the robot arm.
-   * @return rb::math::Array6
+   * @return rb::math::VectorX
    */
-  rb::math::Array6 getAlpha(void);
+  rb::math::VectorX getAlpha(void) const;
 
   /*!
    * @brief Get the link offset `d` value between each joint of the robot arm.
-   * @return rb::math::Array6
+   * @return rb::math::VectorX
    */
-  rb::math::Array6 getD(void);
+  rb::math::VectorX getD(void) const;
 
   /*!
    * @brief Get the joint angle \f$\theta\f$ value of each joint of the robot arm.
-   * @return rb::math::Array6
+   * @return rb::math::VectorX
    */
-  rb::math::Array6 getTheta(void);
+  rb::math::VectorX getTheta(void) const;
 
   /*!
    * @brief Set the upper limits of joint angles for the robot arm.
-   * @param up_lim    An rb::math::Array6 contain the upper limit of all joints.
+   * @param up_lim    An rb::math::VectorX contain the upper limit of all joints.
    */
-  void setUpLimit(rb::math::Array6& up_lim);
+  void setUpLimit(rb::math::VectorX& up_lim);
 
   /*!
    * @brief Get the upper limits of joint angles of the robot arm.
-   * @return rb::math::Array6
+   * @return rb::math::VectorX
    */
-  rb::math::Array6 getUpLimit(void);
+  rb::math::VectorX getUpLimit(void) const;
 
   /*!
    * @brief Set the lower limits of joint angles for the robot arm.
-   * @param low_lim   An rb::math::Array6 contain the lower limit of all joints.
+   * @param low_lim   An rb::math::VectorX contain the lower limit of all joints.
    */
-  void setLowLimit(rb::math::Array6& low_lim);
+  void setLowLimit(rb::math::VectorX& low_lim);
 
   /*!
    * @brief Get the lower limits of joint angles of the robot arm.
-   * @return rb::math::Array6
+   * @return rb::math::VectorX
    */
-  rb::math::Array6 getLowLimit(void);
-
+  rb::math::VectorX getLowLimit(void) const;
 
 protected:
   /*! Link length data member of modified D-H parameter for robot arm */
-  rb::math::Array6 a;                          //!< Link length (mm)
+  rb::math::VectorX a;                          //!< Link length (mm)
   /*! Link twist data member of modified D-H parameter for robot arm */
-  rb::math::Array6 alpha;                      //!< Link twist angle (degree)
+  rb::math::VectorX alpha;                      //!< Link twist angle (degree)
   /*! Link offset data member of modified D-H parameter for robot arm */
-  rb::math::Array6 d;                          //!< Link offset (mm)
+  rb::math::VectorX d;                          //!< Link offset (mm)
   /*! Joint angle data member of modified D-H parameter for robot arm */
-  rb::math::Array6 theta;                      //!< Joint angle (degree)
-  rb::math::Array6 uplimit;                    //!< Upper limit of all joints
-  rb::math::Array6 lowlimit;                   //!< Lower limit of all joints
-  rb::math::Matrix4 work_base_T;               //!< Homogeneous transformation matrix of robot base with respect to world
-  rb::math::Matrix4 work_base;                 //!< Position & Orientation of TCP in world coordination
+  rb::math::VectorX theta;                      //!< Joint angle (degree)
+  rb::math::VectorX up_lim_;                    //!< Upper limit of all joints
+  rb::math::VectorX low_lim_;                   //!< Lower limit of all joints
 
 private:
-  rb::math::Array6 m_ini_theta;            //!< Storage initialize 6 joint angle
-  rb::math::Array6 m_pre_theta;            //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
-  rb::math::Matrix4 m_T_act;               //!< HT matrix of TCP with respected to work base
-  rb::math::Matrix4 m_tool_T;              //!< HT matrix of TCP with respected to 6th joint (last joint coordination)
-  ArmPose m_pos_act;                       //!< position & orientation (x,y,z,a,b,c) of TCP, and HT matrix of each joint & work base
-  int pre_fit_solution;                    //!< The index of configuration of previous IK
+  rb::math::VectorX ini_theta_;                 //!< Storage initialize 6 joint angle
+  rb::math::VectorX pre_theta_;                 //!< Storage previous set of 6 joint angle, this will use to precheck result of IK
+  rb::math::Matrix4 base_tcp_tf_;              //!< HT matrix of TCP with respected to robot base
+  ArmPose tcp_pose_;                           //!< Position & orientation (x,y,z,a,b,c) of TCP in world coordination
+  int pre_fit_solution_;                        //!< The index of configuration of previous IK
 
   // private functions
   // TODO: could move functions for matrix manipulating, such as rpy2tr & tr2rpy to math.h
