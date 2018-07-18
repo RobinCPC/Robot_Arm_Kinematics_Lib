@@ -14,6 +14,7 @@
 
 #include "link.h"
 
+#include <Eigen/StdVector>
 
 namespace rb //! Robot Arm Library namespace
 {
@@ -46,10 +47,6 @@ struct ArmPose
   double a;   //!< roll
   double b;   //!< pitch
   double c;   //!< yaw
-  /*! 2D Array of Homogeneous Transformation Matrix for 6 axes
-   *  and work_base coordination system
-   */
-  rb::math::Array< rb::math::Matrix4, 7, 1> T;
 };
 
 /*!
@@ -107,6 +104,7 @@ struct ArmAxisValue
 class KinematicChain
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /*! Default Constuctor */
   KinematicChain();
 
@@ -127,16 +125,21 @@ public:
    * @brief Compute forward Kinematics for given angle, update each joint
    *  value, and return current current position and orientation of TCP.
    * @param q         An array of joint value (degree or mm).
+   * @param update    A boolean to check if update the value of joints and frames.
    * @return  a structure include position and orientation of TCP.
    */
-  virtual ArmPose forwardKin(const std::vector<double>& q);
+  virtual ArmPose forwardKin(const rb::math::VectorX& q, const bool update=true);
 
   /*!
-   * @brief Compute inverse kinematics for given position and orientation in
+   * @brief Compute inverse kinematics for given tranformation matrix of TCP in
    *        Cartesian coordination system.
-   * @return  a enumerator indicates the result of inverse kinematics.
+   * @return IK_RESULT  a enumerator indicates the result of inverse kinematics.
    */
-  virtual IK_RESULT inverseKin(void);
+  virtual IK_RESULT inverseKin(
+          const rb::math::Matrix4& world_tcp_tf,  //!< Transformation of tcp in world coordination.
+          rb::math::VectorX& joints,              //!< The best fittest solution.
+          ArmAxisValue& all_sols                  //!< A data structure to store all possible solutions.
+          ) = 0;
 
   /*!
    * @brief Compute homogeneous transformation matrix for given link properties,
@@ -179,6 +182,12 @@ public:
   rb::math::Matrix4 getBase(void) const;
 
   /*!
+   * @brief Get the HT matrix of TCP w.r.t world coordination.
+   * @return
+   */
+  rb::math::Matrix4 getTCP(void) const;
+
+  /*!
    * @brief Set the degree of freedom according to the property of links.
    * @return
    */
@@ -191,15 +200,22 @@ public:
   int getDOF(void) const;
 
 protected:
-  std::vector<Link*> links_;            //!< A vector of Link class
-  int dof_;                             //!< A integer indicates the degree of freedom
-  rb::math::Matrix4 base_tf_;           //!< HT matrix of robot base with respected to world coordination
-  rb::math::Matrix4 tool_tf_;           //!< HT matrix of TCP with respected to robot flange (last joint coordination)
-  rb::math::Matrix4 world_tcp_tf_;      //!< HT matrix of TCP with respected to world coordination.
-  rb::math::Vector3 gravity_;           //!< A Vector of gravity
+  /*! A vector of Link class. */
+  std::vector<rb::kin::Link*> links_;
+  //std::vector<rb::kin::Link*, Eigen::aligned_allocator<rb::kin::Link*> > links_;
 
-  std::string manufactor_;              //!< the name of manufactor of the robot
-  std::string model_;                   //!< the model of the robot named by its manufactor
+  /*!< A vector of HT matrix to the pose of each joint and TCP. */
+  std::vector<rb::math::Matrix4*> frames_;
+  //std::vector<rb::math::Matrix4*, Eigen::aligned_allocator<rb::math::Matrix4*> > frames_;
+
+  int dof_;                                   //!< A integer indicates the degree of freedom
+  rb::math::Matrix4 base_tf_;                 //!< HT matrix of robot base with respected to world coordination
+  rb::math::Matrix4 tool_tf_;                 //!< HT matrix of TCP with respected to robot flange (last joint)
+  rb::math::Matrix4 world_tcp_tf_;            //!< HT matrix of TCP with respected to world coordination.
+  rb::math::Vector3 gravity_;                 //!< Gravity set as a vector.
+
+  std::string manufactor_;                    //!< the name of manufactor of the robot
+  std::string model_;                         //!< the model of the robot named by its manufactor
 
 private:
   // private functions

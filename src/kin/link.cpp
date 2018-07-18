@@ -68,8 +68,12 @@ Link::~Link(){}
 
 rb::math::Matrix4 operator* (Link& lhs, Link& rhs)
 {
-  rb::math::Matrix4 result = lhs.tf * rhs.tf;
-  return result;
+  return lhs.tf * rhs.tf;
+}
+
+rb::math::Matrix4 operator* (rb::math::Matrix4& lhs, Link& rhs)
+{
+  return lhs * rhs.tf;
 }
 
 rb::math::Matrix4& operator*= (rb::math::Matrix4& lhs, Link& rhs)

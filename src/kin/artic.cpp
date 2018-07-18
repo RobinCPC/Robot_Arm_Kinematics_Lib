@@ -1,8 +1,8 @@
-/*--------------------------------------------------------------------------------
- * artic.cpp
- * Author             Chien-Pin Chen,
- * Description        General robot arm Kinematic application
- *--------------------------------------------------------------------------------*/
+/*!
+ * @file        artic.cpp
+ * @brief       General robot arm Kinematic application
+ * @author      Chien-Pin Chen,
+ */
 #include "artic.h"
 
 #include <algorithm>
@@ -18,8 +18,6 @@ using rb::math::RAD2DEG;
 using rb::math::DEG2RAD;
 using rb::math::PI;
 
-//using rb::math::Array;
-//using rb::math::Array6;
 using rb::math::Matrix3;
 using rb::math::Matrix4;
 using rb::math::MatrixX;
@@ -57,8 +55,8 @@ Artic::Artic()
   low_lim_ << -170., -190., -119.0-90.0,  -190., -120., -350.; /* degree */
 
   /* Initialize rest variable */
-  ini_theta_ = VectorX::Constant(this->getDOF(), 1, 0.0); //VectorX(this->links_.size(), 0.f);
-  pre_theta_ = VectorX::Constant(this->getDOF(), 1, 0.0); //VectorX(this->links_.size(), 0.f);
+  ini_theta_ = VectorX::Constant(this->getDOF(), 1, 0.0);
+  pre_theta_ = VectorX::Constant(this->getDOF(), 1, 0.0);
 
   base_tcp_tf_ = Matrix4::Identity();
 
@@ -77,33 +75,33 @@ Artic::Artic()
   }
 
   // Compute transformation of each joint with base and tcp frame
-  std::vector<Matrix4> T06(this->dof_);
-  T06[0] = Matrix4::Identity();
-  for(int i=0; i < this->dof_; ++i)
+  std::vector<Matrix4> trsf06(this->dof_);
+  trsf06[0] = this->links_[0]->tf;
+  for(int i=1; i < this->dof_; ++i)
   {
-    T06[i] *= (*this->links_[i]);   // T01* T12 * T23 ... * T56
+    trsf06[i] = trsf06[i-1] * (*this->links_[i]);   // T01* T12 * T23 ... * T56
   }
 
-  base_tcp_tf_ = T06.back() * tool_tf_;           // base_tcp_tf_ is Tool center point HT Matrix w.r.t robot base
-  world_tcp_tf_ = base_tf_ * base_tcp_tf_;  // get TCP in work base coordination
+  base_tcp_tf_ = trsf06.back() * tool_tf_;    // base_tcp_tf_ is Tool center point HT Matrix w.r.t robot base
+  world_tcp_tf_ = base_tf_ * base_tcp_tf_;    // get TCP in work base coordination
 
   /* calculate xyzabc */
   tcp_pose_.x = world_tcp_tf_(0,3);
   tcp_pose_.y = world_tcp_tf_(1,3);
   tcp_pose_.z = world_tcp_tf_(2,3);
   tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
-  tcp_pose_.a *= RAD2DEG;                 // change radian to degree
+  tcp_pose_.a *= RAD2DEG;                     // change radian to degree
   tcp_pose_.b *= RAD2DEG;
   tcp_pose_.c *= RAD2DEG;
 
-  /* copy HTmatrix */
-  tcp_pose_.T[0] = T06[0];
-  tcp_pose_.T[1] = T06[1];
-  tcp_pose_.T[2] = T06[2];
-  tcp_pose_.T[3] = T06[3];
-  tcp_pose_.T[4] = T06[4];
-  tcp_pose_.T[5] = base_tcp_tf_;
-  tcp_pose_.T[6] = world_tcp_tf_;
+  /* Initialize frames and copy HTmatrix of all joints and tcp */
+  this->frames_.resize(this->getDOF()+1);
+  //this->frames_ = std::vector<rb::math::Matrix4*, Eigen::aligned_allocator<rb::math::Matrix4*> >(7);
+  for(int i=0; i < this->getDOF(); ++i)
+  {
+    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+  }
+  this->frames_.back() = new Matrix4(world_tcp_tf_);
 }
 
 Artic::Artic(
@@ -115,8 +113,9 @@ Artic::Artic(
     const rb::math::VectorX& lowlimit0)
 {
   // check if size of all paremeter are the smae
-  bool is_match = a0.size() == alpha0.size() == d0.size() == ini_theta.size()
-                == uplimit0.size() == lowlimit0.size();
+  std::vector<VectorX> dh_list = {a0, alpha0, d0, ini_theta, uplimit0, lowlimit0};
+  bool is_match = std::all_of(dh_list.begin(), dh_list.end(), [](VectorX& d)
+          { return d.size() == 6;});
   if (!is_match)
   {
     assert("Parameters size not match!\n");
@@ -129,6 +128,7 @@ Artic::Artic(
     this->links_.push_back(new Link(a0[i], alpha0[i], d0[i], ini_theta[i],
                                     uplimit0[i], lowlimit0[i]));
   }
+  this->setDOF();
 
   this->a = a0;
   this->alpha = alpha0;
@@ -159,15 +159,15 @@ Artic::Artic(
   }
 
   // Compute transformation of each joint with base and tcp frame
-  std::vector<Matrix4> T06(this->dof_);
-  T06[0] = Matrix4::Identity();
-  for(int i=0; i < this->dof_; ++i)
+  std::vector<Matrix4> trsf06(this->dof_);
+  trsf06[0] = this->links_[0]->tf;
+  for(int i=1; i < this->dof_; ++i)
   {
-    T06[i] *= (*this->links_[i]);   // T01* T12 * T23 ... * T56
+    trsf06[i] = trsf06[i-1] * (*this->links_[i]);   // T01* T12 * T23 ... * T56
   }
 
-  base_tcp_tf_ = T06.back() * tool_tf_;     // base_tcp_tf_ is Tool center point HT Matrix
-  world_tcp_tf_ = base_tf_ * base_tcp_tf_;  // get TCP in work base coordination
+  base_tcp_tf_ = trsf06.back() * tool_tf_;    // base_tcp_tf_ is Tool center point HT Matrix
+  world_tcp_tf_ = base_tf_ * base_tcp_tf_;    // get TCP in work base coordination
 
   /* calculate xyzabc */
   tcp_pose_.x = world_tcp_tf_(0,3);
@@ -178,39 +178,30 @@ Artic::Artic(
   tcp_pose_.b *= RAD2DEG;
   tcp_pose_.c *= RAD2DEG;
 
-  /* copy HTmatrix */
-  tcp_pose_.T[0] = T06[0];
-  tcp_pose_.T[1] = T06[1];
-  tcp_pose_.T[2] = T06[2];
-  tcp_pose_.T[3] = T06[3];
-  tcp_pose_.T[4] = T06[4];
-  tcp_pose_.T[5] = base_tcp_tf_;
-  tcp_pose_.T[6] = world_tcp_tf_;
+  /* Initialize frames and copy HT matrix of all joints and tcp */
+  this->frames_.resize(this->getDOF()+1);
+  for(int i=0; i < this->getDOF(); ++i)
+  {
+    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+  }
+  this->frames_.back() = new Matrix4(world_tcp_tf_);
 }
 
 /* Destructor */
 Artic::~Artic(){}
 
 /* Forward Kinematics */
-ArmPose Artic::forwardKin(const rb::math::VectorX& q)
+ArmPose Artic::forwardKin(const rb::math::VectorX& q, const bool update)
 {
-  // storage input angles as previous angles for finding best solution in IK
-  pre_theta_ = q;
-
-  // calculate homogeneous matrix for each joint
-  std::vector<Matrix4> T(this->links_.size());
-  for(int i=0; i < q.size(); ++i)
+  // Compute transformation of each joint with base and tcp frame
+  std::vector<Matrix4> trsf06(this->getDOF());
+  trsf06[0] = this->links_[0]->computeTransform(q[0], update);
+  for(int i=1; i < q.size(); ++i)
   {
-    T[i] = this->links_[i]->computeTransform(q[i], true);
+    trsf06[i] = trsf06[i-1] * this->links_[i]->computeTransform(q[i], update);
   }
 
-  //Matrix4 T12, T13, T14, T15, T16;
-  Matrix4 T12 = T[0] * T[1];                // A02 = A01 * A12
-  Matrix4 T13 = T12 * T[2];
-  Matrix4 T14 = T13 * T[3];
-  Matrix4 T15 = T14 * T[4];
-  Matrix4 T16 = T15 * T[5];
-  base_tcp_tf_ = T16 * tool_tf_;            // base_tcp_tf_ is Tool center point HT Matrix
+  base_tcp_tf_ = trsf06.back() * tool_tf_;     // base_tcp_tf_ is Tool center point HT Matrix
   world_tcp_tf_ = base_tf_ * base_tcp_tf_;  // get TCP in work base coordination
 
   /* calculate xyzabc */
@@ -222,20 +213,132 @@ ArmPose Artic::forwardKin(const rb::math::VectorX& q)
   tcp_pose_.b = RAD2DEG * tcp_pose_.b;
   tcp_pose_.c = RAD2DEG * tcp_pose_.c;
 
-  /* copy base_tcp_tf_ */
-  tcp_pose_.T[0] = T[0];
-  tcp_pose_.T[1] = T12;
-  tcp_pose_.T[2] = T13;
-  tcp_pose_.T[3] = T14;
-  tcp_pose_.T[4] = T15;
-  tcp_pose_.T[5] = base_tcp_tf_;
-  tcp_pose_.T[6] = world_tcp_tf_;
+  /* update HT matrix of all joints and tcp */
+  if (update)
+  {
+    // storage input angles as previous angles for finding best solution in IK
+    pre_theta_ = q;
+    pre_fit_solution_ = 9;       // reset previous solution
 
-  pre_fit_solution_ = 9;       // reset previous solution
+    for(int i=0; i < this->getDOF(); ++i)
+    {
+      *(this->frames_[i]) = this->base_tf_ * trsf06[i];
+    }
+    *(this->frames_.back()) = world_tcp_tf_;
+  }
+
   return tcp_pose_;
 }
 
 /* Inverse Kinematics */
+IK_RESULT Artic::inverseKin(const rb::math::Matrix4& world_tcp_tf,
+    rb::math::VectorX& joints, ArmAxisValue& all_sols)
+{
+  // reset all possible (8) solutions
+  all_sols.axis_value = MatrixX::Constant(8, 6, 0.0);
+  size_t num_sols = sizeof(all_sols.limit_check) / sizeof(all_sols.limit_check[0]);
+  for(size_t i=0; i < num_sols; ++i)
+  {
+    all_sols.solution_check[i] = true;
+    all_sols.singular_check[i] = true;
+    all_sols.limit_check[i] = true;
+  }
+
+  // translate work base coordination system to robot coordination.
+  Matrix4 world_base_tf_inv = this->base_tf_.inverse();
+  Matrix4 base_tcp_tf = world_base_tf_inv * world_tcp_tf;
+  // get HT matrix of the robot arm flange
+  Matrix4 tool_tf_inv = this->tool_tf_.inverse();
+  Matrix4 base_flange_tf = base_tcp_tf * tool_tf_inv;
+#ifndef NDEBUG
+  std::cout << "\nworld_tcp_tf:\n" << world_tcp_tf;
+  std::cout << "\nbase_tf_:\n" << this->base_tf_;
+  std::cout << "\nworld_base_tf_inv:\n" << world_base_tf_inv;
+  std::cout << "\nbase_tcp_tf:\n" << base_tcp_tf;
+#endif
+
+  /* Start to solve IK, get wrist center point Wc (or P0 = A06 * P6
+   * from eqn. 2.77 of J.J. Craig's book),  and solve 1st joint. */
+  Eigen::Vector4d p0;
+  Eigen::Vector4d p6 = {0., 0., -this->d[5], 1.};
+  p0 = base_flange_tf * p6;
+  // solve joint 1st of solution 1-4
+  double theta1 = atan2(-p0[1], p0[0]);
+  for(int i=0; i < 4; ++i)
+  {
+    all_sols.axis_value(i, 0) = theta1;
+  }
+
+  /* Solve joint 2nd, 3rd of solutions 1-2, 3-4 */
+  std::vector<bool> config = {0, 0, 0};
+  solvePitchPitchIK(theta1, p0, config, all_sols);
+
+  if(all_sols.solution_check[0] == true)
+  {
+    /*solve joint 5,4,6  solution 1-2*/
+    solveRowPitchRowIK(theta1, config, base_flange_tf, all_sols);
+    /*solve theta 5,4,6  solution 3-4*/
+    config = {0, 1, 0};
+    solveRowPitchRowIK(theta1, config, base_flange_tf, all_sols);
+  }
+
+  /*solve joint 1st backward solution 5-8*/
+  config = {1, 0, 0};
+  double theta1_b = theta1 + PI;
+  // precheck 1st joint value
+  preCheck(1, theta1_b);
+  for(int i=4; i<8; ++i)
+  {
+    all_sols.axis_value(i, 0) = theta1_b;
+  }
+
+  /*solve joint 2nd 3rd of  solution 5-6, 7-8*/
+  solvePitchPitchIK(theta1_b, p0, config, all_sols);
+
+  if(all_sols.solution_check[4] == true)
+  {
+    /*solve joint 5,4,6  solution 5-6*/
+    solveRowPitchRowIK(theta1_b, config, base_flange_tf, all_sols);
+    /*solve theta 5,4,6  solution 7-8*/
+    config = {1, 1, 0};
+    solveRowPitchRowIK(theta1_b, config, base_flange_tf, all_sols);
+  }
+
+  // Convert to degree unit before find the most fit solution.
+  all_sols.axis_value *= RAD2DEG;
+  IK_RESULT check = solutionCheck(all_sols);
+
+  if( check != IK_RESULT::IK_COMPLETE)
+  {
+    // IK fail. return IK result, but not update joint values
+#ifndef NDEBUG
+    std::cout << "No Solution!!\n";
+#endif
+    return check;
+  }
+
+  // update the pose of robot arm
+  this->tcp_pose_.x = world_tcp_tf(0, 3);
+  this->tcp_pose_.y = world_tcp_tf(1, 3);
+  this->tcp_pose_.z = world_tcp_tf(2, 3);
+  tr2rpy(world_tcp_tf,
+      this->tcp_pose_.a,
+      this->tcp_pose_.b,
+      this->tcp_pose_.c);
+
+  // update pre_theta_ to the most fit solution.
+  this->pre_theta_ = all_sols.axis_value.row(all_sols.fit);
+  joints = all_sols.axis_value.row(all_sols.fit);
+
+#ifndef NDEBUG
+  std::cout << "\np0:\n" << p0 << '\n';
+  std::cout << "\n axis_value:\n" << all_sols.axis_value.transpose() << '\n';
+  std::cout << "\n The most fit solution: " << all_sols.fit << '\n';
+#endif
+
+  return check;
+}
+
 IK_RESULT Artic::inverseKin(const double& x, const double& y, const double& z,
     const double& roll, const double& pitch, const double& yaw,
     rb::math::VectorX& joints, ArmAxisValue& all_sols)
@@ -276,7 +379,7 @@ IK_RESULT Artic::inverseKin(const double& x, const double& y, const double& z,
   Matrix4 base_flange_tf = base_tcp_tf * tool_tf_inv;
 
 #ifndef NDEBUG
-  printf("\nrobot_flange_Tr:\n");
+  printf("\nbase_flange_tf:\n");
   printf("[%.4f %.4f %.4f %.4f]\n",base_flange_tf(0, 0),base_flange_tf(0, 1),base_flange_tf(0, 2),base_flange_tf(0, 3));
   printf("[%.4f %.4f %.4f %.4f]\n",base_flange_tf(1, 0),base_flange_tf(1, 1),base_flange_tf(1, 2),base_flange_tf(1, 3));
   printf("[%.4f %.4f %.4f %.4f]\n",base_flange_tf(2, 0),base_flange_tf(2, 1),base_flange_tf(2, 2),base_flange_tf(2, 3));
@@ -352,8 +455,6 @@ IK_RESULT Artic::inverseKin(const double& x, const double& y, const double& z,
   this->tcp_pose_.a = roll;
   this->tcp_pose_.b = pitch;
   this->tcp_pose_.c = yaw;
-  this->tcp_pose_.T[5] = base_tcp_tf;
-  this->tcp_pose_.T[6] = world_tcp_tf;
 
   // update pre_theta_ to the most fit solution.
   this->pre_theta_ = all_sols.axis_value.row(all_sols.fit);

@@ -3,7 +3,7 @@ project(RobotArmLib)
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
 set(VERSION_MINOR   0   CACHE STRING "Project minor version number.")
-set(VERSION_PATCH   3   CACHE STRING "Project patch version number.")
+set(VERSION_PATCH   4   CACHE STRING "Project patch version number.")
 
 set(CMAKE_CXX_STANDARD 11)
 #set(CXX_FLAGS "-g -Wall -Wextra")
@@ -32,6 +32,8 @@ add_library(artic SHARED
     src/kin/artic.h
     src/kin/kinematic_chain.cpp
     src/kin/kinematic_chain.h
+    src/kin/link.cpp
+    src/kin/link.h
     )
 if(EIGEN3_FOUND)
     target_link_libraries(artic Eigen3::Eigen)
@@ -42,8 +44,6 @@ endif(EIGEN3_FOUND)
 #build test run exec
 add_executable(test_run
     test/test_run.cpp
-    src/kin/link.cpp
-    src/kin/link.h
     )
 target_link_libraries(test_run artic)
 

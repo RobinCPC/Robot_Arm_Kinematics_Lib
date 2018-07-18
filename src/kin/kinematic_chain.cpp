@@ -41,23 +41,78 @@ std::ostream& operator<< (std::ostream& ost, const ArmPose& pose)
 // Kinematic Chain Class
 KinematicChain::KinematicChain(){}
 
-KinematicChain::KinematicChain( std::vector<rb::kin::Link*> links,
+KinematicChain::KinematicChain(
+    std::vector<rb::kin::Link*> links,
     rb::math::Matrix4  base, rb::math::Matrix4  tool, rb::math::Vector3  gravity,
     std::string manufactor, std::string model
     )
 {
+  // Initialize the properties of Kinematic Chain
+  this->links_ = links;
+  this->setDOF();
+
+  this->tool_tf_ = tool;
+  this->base_tf_ = base;
+
+  // Compute transformation of each joint with base and tcp frame
+  std::vector<Matrix4> trsf06(this->dof_);
+  trsf06[0] = this->links_[0]->tf;
+  for(int i=1; i < this->dof_; ++i)
+  {
+    trsf06[i] = trsf06[i-1] * (*this->links_[i]);   // T01* T12 * T23 ... * T56
+  }
+  this->world_tcp_tf_ = base_tf_ * trsf06.back() * tool_tf_;    // get TCP in work base coordination
+
+  /* Initialize frames and copy HTmatrix of all joints and tcp */
+  this->frames_.resize(this->getDOF()+1);
+  //this->frames_ = std::vector<rb::math::Matrix4*, Eigen::aligned_allocator<rb::math::Matrix4*> >(7);
+  for(int i=0; i < this->getDOF(); ++i)
+  {
+    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+  }
+  this->frames_.back() = new Matrix4(this->world_tcp_tf_);
+
+  // Initialze additional properties
+  this->gravity_ = gravity;
+  this->manufactor_ = manufactor;
+  this->model_ = model;
+
 }
 
 KinematicChain::~KinematicChain(){}
 
-ArmPose KinematicChain::forwardKin(const std::vector<double>& q)
+ArmPose KinematicChain::forwardKin(const rb::math::VectorX& q, const bool update)
 {
-  return  ArmPose();
-}
+  // Compute transformation of each joint with base and tcp frame
+  std::vector<Matrix4> trsf06(this->getDOF());
+  trsf06[0] = this->links_[0]->computeTransform(q[0], update);
+  for(int i=1; i < q.size(); ++i)
+  {
+    trsf06[i] = trsf06[i-1] * this->links_[i]->computeTransform(q[i], update);
+  }
+  world_tcp_tf_ = base_tf_ * trsf06.back() * tool_tf_;  // get TCP in work base coordination
 
-IK_RESULT KinematicChain::inverseKin(void)
-{
-  return IK_RESULT::IK_COMPLETE;
+  /* calculate xyzabc */
+  ArmPose tcp_pose = ArmPose();
+  tcp_pose.x = world_tcp_tf_(0, 3);
+  tcp_pose.y = world_tcp_tf_(1, 3);
+  tcp_pose.z = world_tcp_tf_(2, 3);
+  tr2rpy(world_tcp_tf_, tcp_pose.a, tcp_pose.b, tcp_pose.c);
+  tcp_pose.a = RAD2DEG * tcp_pose.a;
+  tcp_pose.b = RAD2DEG * tcp_pose.b;
+  tcp_pose.c = RAD2DEG * tcp_pose.c;
+
+  /* update HT matrix of all joints and tcp */
+  if (update)
+  {
+    for(int i=0; i < this->getDOF(); ++i)
+    {
+      *(this->frames_[i]) = this->base_tf_ * trsf06[i];
+    }
+    *(this->frames_.back()) = world_tcp_tf_;
+  }
+
+  return tcp_pose;
 }
 
 bool KinematicChain::setTool(const ArmPose& tool_pose)
@@ -99,6 +154,11 @@ void KinematicChain::setBase(const rb::math::Matrix4& base)
 rb::math::Matrix4 KinematicChain::getBase(void) const
 {
   return this->base_tf_;
+}
+
+rb::math::Matrix4 KinematicChain::getTCP(void) const
+{
+  return this->world_tcp_tf_;
 }
 
 void KinematicChain::setDOF(void)

@@ -65,6 +65,14 @@ public:
    *  @brief  Overload multiply operator to concatenate transformation of two links.
    *  @param  lhs     A 4x4 matrix at left hand side.
    *  @param  rhs     A link class at right hand side.
+   *  @return A 4X4 matrix that storage chaining transformation of two links.
+   */
+  friend rb::math::Matrix4 operator* (rb::math::Matrix4& lhs, Link& rhs);
+
+  /*!
+   *  @brief  Overload multiply operator to concatenate transformation of two links.
+   *  @param  lhs     A 4x4 matrix at left hand side.
+   *  @param  rhs     A link class at right hand side.
    *  @return A 4X4 matrix that storage chaining transformation of a 4x4 matrix and a link.
    */
   friend rb::math::Matrix4& operator*= (rb::math::Matrix4& lhs, Link& rhs);
@@ -108,7 +116,7 @@ private:
 
 };
 
-}   // namespace kin
+}       // namespace kin
 }       // namespace rb
 
 #endif  // RB_LINK_H_

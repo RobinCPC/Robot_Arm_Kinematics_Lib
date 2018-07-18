@@ -22,7 +22,7 @@ namespace kin //! Kinematics module namespace
 class Artic : public KinematicChain
 {
 public:
-  /*! Default Constuctor */
+  /*! Default Constructor */
   Artic();
 
   /*! Constructor with certain robot arm data. */
@@ -42,9 +42,21 @@ public:
    * @brief Compute forward Kinematics for given angle, update each joint
    *  value, and return current current position and orientation of TCP.
    * @param q         An array of joint degree.
+   * @param update    A boolean to check if update the value of joints and frames.
    * @return ArmPose  a structure include position and orientation of TCP.
    */
-  ArmPose forwardKin(const rb::math::VectorX& q);
+  ArmPose forwardKin(const rb::math::VectorX& q, const bool update=true) override;
+
+  /*!
+   * @brief Compute inverse kinematics for given transformation matrix of TCP in
+   *        Cartesian coordination system.
+   * @return IK_RESULT  a enumerator indicates the result of inverse kinematics.
+   */
+  IK_RESULT inverseKin(
+          const rb::math::Matrix4& world_tcp_tf,  //!< Transformation of tcp in world coordination.
+          rb::math::VectorX& joints,              //!< The best fittest solution.
+          ArmAxisValue& all_sols                  //!< A data structure to store all possible solutions.
+          ) override;
 
   /*!
    * @brief Compute inverse kinematics for given position and orientation in
@@ -58,7 +70,7 @@ public:
       const double& roll,         //!< roll value of the orientation.
       const double& pitch,        //!< pitch value of the orientation.
       const double& yaw,          //!< yaw value of the orientation.
-      rb::math::VectorX& joints,   //!< the best fittest IK solution.
+      rb::math::VectorX& joints,  //!< the best fittest IK solution.
       ArmAxisValue& all_sols      //!< a data structure to store all possible solutions.
       );
 
