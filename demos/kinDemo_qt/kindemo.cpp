@@ -1,7 +1,7 @@
 #include "kindemo.h"
 #include "ui_kindemo.h"
 
-using rb::math::Array6;
+using rb::math::VectorX;
 
 kinDemo::kinDemo(QWidget *parent) :
     QDialog(parent),
@@ -43,12 +43,12 @@ void kinDemo::OnBtnClickInit()
     robot = std::unique_ptr<rb::kin::Artic> {new rb::kin::Artic};
 
     // get DH paramter
-    Array6 a0 = robot->getA();
-    Array6 alpha0 = robot->getAlpha();
-    Array6 d0 = robot->getD();
-    Array6 th0 = robot->getTheta();
-    Array6 up0 = robot->getUpLimit();
-    Array6 low0 = robot->getLowLimit();
+    VectorX a0 = robot->getA();
+    VectorX alpha0 = robot->getAlpha();
+    VectorX d0 = robot->getD();
+    VectorX th0 = robot->getTheta();
+    VectorX up0 = robot->getUpLimit();
+    VectorX low0 = robot->getLowLimit();
 
     for(int i=0; i< 6; ++i)
     {
@@ -67,7 +67,7 @@ void kinDemo::OnBtnClickInit()
 
 void kinDemo::OnBtnClickFK()
 {
-    Array6 th = Array6::Constant(0.0);
+    VectorX th(ui->dhTableWidget->rowCount());
     QString get_str;
 
     for(int i=0; i < 6; ++i)
@@ -123,7 +123,7 @@ void kinDemo::OnBtnClickIK()
     get_str = ui->yawEdit->text();
     double yaw = get_str.toDouble();
 
-    Array6 q;
+    VectorX q(ui->dhTableWidget->rowCount());
     rb::kin::IK_RESULT check = robot->inverseKin(px, py, pz, row, pitch,
                                             yaw, q, joint_value);
 
@@ -171,13 +171,14 @@ void kinDemo::OnBtnClickReset()
 {
     // get data from dhTable
     QString get_str;
+    int num_row = (ui->dhTableWidget->rowCount());
 
-    Array6 a0 = Array6::Constant(0.0);
-    Array6 alpha0 = Array6::Constant(0.0);
-    Array6 d0 = Array6::Constant(0.0);
-    Array6 th0 = Array6::Constant(0.0);
-    Array6 up0 = Array6::Constant(0.0);
-    Array6 low0 = Array6::Constant(0.0);
+    VectorX a0(num_row);
+    VectorX alpha0(num_row);
+    VectorX d0(num_row);
+    VectorX th0(num_row);
+    VectorX up0(num_row);
+    VectorX low0(num_row);
 
     for(int i=0; i < 6; ++i)
     {

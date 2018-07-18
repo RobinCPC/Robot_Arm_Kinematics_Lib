@@ -28,12 +28,14 @@ SOURCES += \
         main.cpp \
         kindemo.cpp \
         ../../src/kin/artic.cpp \
-        ../../src/kin/kinematic_chain.cpp
+        ../../src/kin/kinematic_chain.cpp \
+        ../../src/kin/link.cpp
 
 HEADERS += \
         kindemo.h \
         ../../src/kin/artic.h \
-        ../../src/kin/kinematic_chain.h
+        ../../src/kin/kinematic_chain.h \
+        ../../src/kin/link.h
 
 FORMS += \
         kindemo.ui

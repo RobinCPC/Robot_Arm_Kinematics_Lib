@@ -39,8 +39,8 @@ int main(void)
 #endif
   auto mPos = robot->getArmPose();
   std::cout << "initial position of TCP:\n";
-  std::cout << mPos.T[5] << '\n';
   std::cout << mPos << '\n';
+  std::cout << robot->getTCP() << '\n';
 
   // Test Forward Kinematics
   rb::math::Array6 qIn;
@@ -51,8 +51,8 @@ int main(void)
     mPos = robot->forwardKin(qIn);
   }
   std::cout << "\n\nUpdate position of TCP:\n";
-  std::cout << mPos.T[5] << "\n\n";
   std::cout << mPos << "\n\n";
+  std::cout << robot->getTCP() << '\n';
 
   // Test Inverse Kinematics
   rb::math::VectorX joints;
