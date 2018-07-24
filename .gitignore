@@ -32,5 +32,8 @@
 build
 bin
 
+# IDE project setting
+*.user
+
 # Apple desktop services store
 .DS_Store

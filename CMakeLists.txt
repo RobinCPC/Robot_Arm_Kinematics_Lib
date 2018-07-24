@@ -9,10 +9,6 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CXX_FLAGS "-g -Wall -Wextra")
 #set(CMAKE_CXX_FLAGS ${CXX_FLAGS})
 
-# check CMAKE flag for compiling
-message("CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
-message("CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
-
 #find extra library (Eigen3) or add diretory
 find_package(Eigen3)     #REQUIRED
 #add_library(Eigen3 NO_MODULE)

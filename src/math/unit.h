@@ -6,6 +6,7 @@
 
 #ifndef RB_UNIT_H_
 #define RB_UNIT_H_
+#include <limits>
 
 namespace rb    //! Robot Arm Library namespace
 {
@@ -21,7 +22,7 @@ namespace math  //! math module namespace
   static const double DEG2RAD = 0.01745329251994329576923690768489;
 
   /*! Constant as critera if some variable close enough to zero. */
-  static const double EPSILON = 2.22044604925031e-5;
+  static const double EPSILON = std::numeric_limits<float>::epsilon();
 
   /*! Constant to present value of gravity. */
   static const double GRAVITY = 0.980665;

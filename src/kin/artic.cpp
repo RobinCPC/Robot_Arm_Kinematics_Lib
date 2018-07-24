@@ -674,7 +674,7 @@ IK_RESULT Artic::solutionCheck(ArmAxisValue& sols)
   }
 
   // check if it's a singular solution.
-  if(sols.solution_check[sols.fit] == false)
+  if(sols.singular_check[sols.fit] == false)
   {
     check = IK_RESULT::IK_SINGULAR;
     sols.fit = 0;
