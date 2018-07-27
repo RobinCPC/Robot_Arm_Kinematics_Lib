@@ -9,6 +9,12 @@ set(CMAKE_CXX_STANDARD 11)
 #set(CXX_FLAGS "-g -Wall -Wextra")
 #set(CMAKE_CXX_FLAGS ${CXX_FLAGS})
 
+###
+# Define build options
+option(BUILD_TESTS "Set to ON to build tests" ON)
+
+###
+
 #find extra library (Eigen3) or add diretory
 find_package(Eigen3)     #REQUIRED
 #add_library(Eigen3 NO_MODULE)
@@ -74,3 +80,8 @@ if(DOXYGEN_FOUND)
 else(DOXYGEN_FOUND)
     message("No Doxygen, can't build Doc!\n")
 endif(DOXYGEN_FOUND)
+
+if(BUILD_TESTS)
+    add_subdirectory(test)
+endif(BUILD_TESTS)
+
