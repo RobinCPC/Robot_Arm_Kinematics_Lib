@@ -22,8 +22,8 @@ else(EIGEN3_FOUND)
         )
 endif(EIGEN3_FOUND)
 
-# build artic library
-add_library(artic SHARED
+# build rbkin library
+add_library(rbkin SHARED
     src/kin/artic.cpp
     src/kin/artic.h
     src/kin/kinematic_chain.cpp
@@ -32,20 +32,21 @@ add_library(artic SHARED
     src/kin/link.h
     )
 if(EIGEN3_FOUND)
-    target_link_libraries(artic Eigen3::Eigen)
+    target_link_libraries(rbkin Eigen3::Eigen)
 else(EIGEN3_FOUND)
-    target_include_directories( artic PUBLIC "/usr/include/eigen3")
+    target_include_directories( rbkin PUBLIC "/usr/include/eigen3")
 endif(EIGEN3_FOUND)
 
 #build test run exec
 add_executable(test_run
     test/test_run.cpp
+    src/math/polynomial.h
     )
-target_link_libraries(test_run artic)
+target_link_libraries(test_run rbkin)
 
 # install test run in ./bin
 install(TARGETS test_run DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-install(TARGETS artic DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS rbkin DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
 
 # Build Doxygen Document

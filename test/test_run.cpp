@@ -4,6 +4,7 @@
 
 #include "../src/kin/link.h"
 #include "../src/kin/artic.h"
+#include "../src/math/polynomial.h"
 
 using namespace rb::kin;
 
@@ -91,6 +92,43 @@ int main(void)
   std::cout << "\n Links from 0 to 6:\n";
   std::cout << T06 << "\n\n";
 
+
+  // ===== Testing Polynomial class =====
+  rb::math::Polynomial traj(5);  // a quintic (order of 5 polynomial function)
+  std::vector<double> start = {403.475, 0., 0.};
+  std::vector<double> end = {303.475, 0., 0.};
+  double T = 2.0;
+  traj.coeffQuintic(start, end, T);
+  std::cout << "coefficient: \n" << traj.getCoeff();
+
+  int step = 11;
+  std::vector<double> z_t(step);
+  rb::math::MatrixX sols(11,6);
+  std::cout << "\nFor solving Inverse Kinematics of 6-axis robot arm "<< step << " times: \n";
+  {
+    Timer timer;
+    for(int i=0; i < step; ++i)
+    {
+      double dt = (T/(step-1))*i;
+       z_t[i] = traj.getPosition(dt);
+      idx = robot->inverseKin(205.533,-205.533, z_t[i],
+          -45.,     45.,   180.,
+          joints, all_sols);
+      sols.row(i) << joints.transpose();
+    }
+  }
+  std::cout << "\n The Solution values: \n" << sols << '\n';
+
+  std::cout << "\n=====Distance Porfile=====\n";
+  for(auto& z : z_t)
+    std::cout << z << "\n";
+
+  std::cout << "\n=====Velocity Porfile=====\n";
+  for(int i=0; i < step; ++i)
+  {
+    double dt = (T/(step-1))*i;
+    std::cout << traj.getVelocity(dt) << "\n";
+  }
 
   return 0;
 }
