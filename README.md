@@ -1,9 +1,10 @@
 # Robot_Arm_Kinematics_Lib
 [![Build Status](https://travis-ci.org/RobinCPC/Robot_Arm_Kinematics_Lib.svg?branch=master)](https://travis-ci.org/RobinCPC/Robot_Arm_Kinematics_Lib)
 
-A kinematic Library for 6-axis Articulated Robot Arm  
+A kinematic Library for 6-axis Articulated Robot Arm
 [Doxygen API Documentation](https://robincpc.github.io/Robot_Arm_Kinematics_Lib/)
 
+Note: still WIP :construction:
 ## Basic Build Instructions
 1. Clone this repo.
 2. Make a build directory: `mkdir build && cd build`
@@ -16,8 +17,12 @@ A kinematic Library for 6-axis Articulated Robot Arm
 * make  >= 4.1
 * gcc/g++ >= 5.4
 * eigen >= 3
-optional for building document
+
+Optional for building document
 * doxygen
 * graphviz
 
-Note: still WIP :construction:  
+##Reference
+* Craig, John J. Introduction to robotics: mechanics and control. Vol. 3. Upper Saddle River: Pearson Prentice Hall, 2005.
+* Corke, Peter. Robotics-Toolbox-Python [Un-Official Link](https://github.com/RobinCPC/robotics-toolbox-python)
+* Robotics Library [GitHub Page](https://github.com/roboticslibrary/rl)
