@@ -35,3 +35,7 @@ endif()
 #add_executable(example example.cpp)
 #target_link_libraries(example gtest_main)
 #add_test(NAME example_test COMMAND example)
+
+add_executable(link link_test.cpp)
+target_link_libraries(link gtest_main rbkin)
+add_test(NAME link_test COMMAND link)

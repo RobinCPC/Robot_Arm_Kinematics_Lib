@@ -82,6 +82,8 @@ else(DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 if(BUILD_TESTS)
+    include(CTest)
+    enable_testing()
     add_subdirectory(test)
 endif(BUILD_TESTS)
 
