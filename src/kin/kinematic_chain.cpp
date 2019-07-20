@@ -42,7 +42,7 @@ std::ostream& operator<< (std::ostream& ost, const ArmPose& pose)
 KinematicChain::KinematicChain(){}
 
 KinematicChain::KinematicChain(
-    std::vector<rb::kin::Link*> links,
+    std::vector<rb::kin::Link*>& links,
     rb::math::Matrix4  base, rb::math::Matrix4  tool, rb::math::Vector3  gravity,
     std::string manufactor, std::string model
     )

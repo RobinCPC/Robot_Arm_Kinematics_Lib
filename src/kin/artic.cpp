@@ -187,6 +187,89 @@ Artic::Artic(
   this->frames_.back() = new Matrix4(world_tcp_tf_);
 }
 
+Artic::Artic(
+      std::vector<rb::kin::Link*>& links,
+      rb::math::Matrix4  base, rb::math::Matrix4  tool, rb::math::Vector3  gravity,
+      std::string manufactor, std::string model
+    )
+{
+  if (links.size() != 6)
+  {
+    assert("Parameters size not match!\n");
+    return;
+  }
+
+  /*initialize Modified DH-Table*/
+  this->links_ = links;
+  this->setDOF();
+
+  this->a.resize(this->getDOF());
+  this->alpha.resize(this->getDOF());
+  this->d.resize(this->getDOF());
+  this->theta.resize(this->getDOF());
+  this->up_lim_.resize(this->getDOF());
+  this->low_lim_.resize(this->getDOF());
+
+  for(int i=0; i < links.size(); ++i)
+  {
+    this->a[i] = links[i]->a;
+    this->alpha[i] = links[i]->alpha;
+    this->d[i] = links[i]->d;
+    this->theta[i] = links[i]->theta;
+    this->up_lim_[i] = links[i]->up_lim;
+    this->low_lim_[i] = links[i]->low_lim;
+  }
+
+  /* Initialize the rest variable */
+  ini_theta_ = VectorX::Constant(links.size(), 1, 0.);
+  pre_theta_ = VectorX::Constant(links.size(), 1, 0.);
+
+  base_tcp_tf_ = Matrix4::Identity();
+
+  pre_fit_solution_ = 9;
+
+  /* Initialize private variable */
+  // TCP Home Trans Matrix
+  this->tool_tf_ = tool;
+
+  /* Initialize HT matrix of base w.r.t world frame (coordination). */
+  this->base_tf_ = base;
+
+  /* Initialize theta angle of each joints */
+  for (int i=0; i < this->links_.size(); ++i)
+  {
+    ini_theta_[i] = this->links_[i]->theta;
+  }
+
+  // Compute transformation of each joint with base and tcp frame
+  std::vector<Matrix4> trsf06(this->dof_);
+  trsf06[0] = this->links_[0]->tf;
+  for(int i=1; i < this->dof_; ++i)
+  {
+    trsf06[i] = trsf06[i-1] * (*this->links_[i]);   // T01* T12 * T23 ... * T56
+  }
+
+  base_tcp_tf_ = trsf06.back() * tool_tf_;    // base_tcp_tf_ is Tool center point HT Matrix
+  world_tcp_tf_ = base_tf_ * base_tcp_tf_;    // get TCP in work base coordination
+
+  /* calculate xyzabc */
+  tcp_pose_.x = world_tcp_tf_(0,3);
+  tcp_pose_.y = world_tcp_tf_(1,3);
+  tcp_pose_.z = world_tcp_tf_(2,3);
+  tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
+  tcp_pose_.a *= RAD2DEG;                   // change radian to degree
+  tcp_pose_.b *= RAD2DEG;
+  tcp_pose_.c *= RAD2DEG;
+
+  /* Initialize frames and copy HT matrix of all joints and tcp */
+  this->frames_.resize(this->getDOF()+1);
+  for(int i=0; i < this->getDOF(); ++i)
+  {
+    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+  }
+  this->frames_.back() = new Matrix4(world_tcp_tf_);
+}
+
 /* Destructor */
 Artic::~Artic(){}
 
