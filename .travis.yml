@@ -45,6 +45,11 @@ matrix:
       osx_image: xcode9.2
       compiler: clang
 
+    allow_failures:
+    - os: osx
+      osx_image: xcode9.2
+      compiler: clang
+
 before_install:
     # linux
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
@@ -54,7 +59,7 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update;
       brew install eigen;
-      brew install doxygen --with-graphviz;
+      brew install doxygen;
       fi
 
 script:
