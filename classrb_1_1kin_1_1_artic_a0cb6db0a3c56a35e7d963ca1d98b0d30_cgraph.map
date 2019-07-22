@@ -1,0 +1,4 @@
+<map id="rb::kin::Artic::Artic" name="rb::kin::Artic::Artic">
+<area shape="rect" id="node2" href="$classrb_1_1kin_1_1_kinematic_chain.html#a43eef3b6f209d32973fb4fc22a9fe425" title="Set the degree of freedom according to the property of links. " alt="" coords="182,5,341,46"/>
+<area shape="rect" id="node3" href="$classrb_1_1kin_1_1_kinematic_chain.html#aa672ba22fbb765eab4a596293a889a2e" title="Get the degree of freedom of this kinematic chain. " alt="" coords="182,70,341,111"/>
+</map>

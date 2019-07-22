@@ -1,0 +1,4 @@
+<map id="rb::kin::KinematicChain::setDOF" name="rb::kin::KinematicChain::setDOF">
+<area shape="rect" id="node2" href="$classrb_1_1kin_1_1_artic.html#afefdd4801f67001a2f41c9101dbd7288" title="Default Constructor. " alt="" coords="229,5,357,32"/>
+<area shape="rect" id="node3" href="$classrb_1_1kin_1_1_kinematic_chain.html#a541679589b3ade3d6eeafc53b0042b40" title="Constructor with a Links vector and other parameter. " alt="" coords="214,57,373,98"/>
+</map>

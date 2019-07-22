@@ -1,0 +1,4 @@
+<map id="rb::kin::KinematicChain::homoTrans" name="rb::kin::KinematicChain::homoTrans">
+<area shape="rect" id="node2" href="$classrb_1_1kin_1_1_artic.html#a7c83c972ca6078e696fc7b9d64428965" title="Compute inverse kinematics for wrist mechanism (row&#45;pitch&#45;row) structure by given first joint..." alt="" coords="214,5,373,46"/>
+<area shape="rect" id="node3" href="$classrb_1_1kin_1_1_artic.html#a77df74816a9851238f804996d048c822" title="Compute inverse kinematics for given transformation matrix of TCP in Cartesian coordination system..." alt="" coords="421,12,584,39"/>
+</map>

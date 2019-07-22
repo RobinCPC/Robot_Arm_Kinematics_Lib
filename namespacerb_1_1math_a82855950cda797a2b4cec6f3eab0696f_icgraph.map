@@ -1,0 +1,4 @@
+<map id="rb::math::homoTrans" name="rb::math::homoTrans">
+<area shape="rect" id="node2" href="$classrb_1_1kin_1_1_link.html#a4a2189f6d313d7e00bc138886fab6fdd" title="Default Constructor. " alt="" coords="240,5,363,32"/>
+<area shape="rect" id="node3" href="$classrb_1_1kin_1_1_link.html#a2f22345facb7e36dd7744abd2d74b444" title="Compute homogeneous transformation matrix of the link by giving joint value, and return the matrix..." alt="" coords="198,56,405,83"/>
+</map>

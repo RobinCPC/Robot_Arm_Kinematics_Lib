@@ -1,0 +1,4 @@
+var searchData=
+[
+  ['artic',['Artic',['../classrb_1_1kin_1_1_artic.html#afefdd4801f67001a2f41c9101dbd7288',1,'rb::kin::Artic::Artic()'],['../classrb_1_1kin_1_1_artic.html#a0cb6db0a3c56a35e7d963ca1d98b0d30',1,'rb::kin::Artic::Artic(const rb::math::VectorX &amp;a0, const rb::math::VectorX &amp;alpha0, const rb::math::VectorX &amp;d0, const rb::math::VectorX &amp;ini_theta, const rb::math::VectorX &amp;uplimit0, const rb::math::VectorX &amp;lowlimit0)'],['../classrb_1_1kin_1_1_artic.html#a8386df41636cd232ecd245232744eae6',1,'rb::kin::Artic::Artic(std::vector&lt; rb::kin::Link * &gt; &amp;links, rb::math::Matrix4 base=rb::math::Matrix4::Identity(), rb::math::Matrix4 tool=rb::math::Matrix4::Identity(), rb::math::Vector3 gravity={0., 0., rb::math::GRAVITY}, std::string manufactor=&quot;None&quot;, std::string model=&quot;None&quot;)']]]
+];

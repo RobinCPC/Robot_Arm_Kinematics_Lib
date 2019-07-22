@@ -1,0 +1,7 @@
+<map id="rb::kin::Artic::inverseKin" name="rb::kin::Artic::inverseKin">
+<area shape="rect" id="node2" href="$classrb_1_1kin_1_1_artic.html#a928b4be72cd0d56704c6211990a82797" title="Compute inverse kinematics for two links (pitch&#45;pitch) structure by given first joint. " alt="" coords="216,5,379,46"/>
+<area shape="rect" id="node3" href="$classrb_1_1kin_1_1_artic.html#a660711a440ae6cdd8ab8e630195610f9" title="Check the value of individual joint depend join limits. " alt="" coords="428,71,585,97"/>
+<area shape="rect" id="node4" href="$classrb_1_1kin_1_1_artic.html#a7c83c972ca6078e696fc7b9d64428965" title="Compute inverse kinematics for wrist mechanism (row&#45;pitch&#45;row) structure by given first joint..." alt="" coords="218,122,377,163"/>
+<area shape="rect" id="node6" href="$classrb_1_1kin_1_1_artic.html#a05902147b228d4db1b8063a91ebbc8f2" title="Find the solutions in all_sols that is most fit to previous joints value. " alt="" coords="224,187,371,229"/>
+<area shape="rect" id="node5" href="$classrb_1_1kin_1_1_kinematic_chain.html#ab9e06c54204373e1d72d9e959f13ac52" title="Compute homogeneous transformation matrix for given link properties, and return the matrix..." alt="" coords="427,122,586,163"/>
+</map>
