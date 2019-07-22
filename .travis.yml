@@ -59,6 +59,7 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update;
       brew install eigen;
+      brew install graphviz;
       brew install doxygen;
       fi
 
