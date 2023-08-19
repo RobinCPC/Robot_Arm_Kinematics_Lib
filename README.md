@@ -22,7 +22,7 @@ Optional for building document
 * doxygen
 * graphviz
 
-##Reference
+## Reference
 * Craig, John J. Introduction to robotics: mechanics and control. Vol. 3. Upper Saddle River: Pearson Prentice Hall, 2005.
-* Corke, Peter. Robotics-Toolbox-Python [Un-Official Link](https://github.com/RobinCPC/robotics-toolbox-python)
+* Corke, Peter. Robotics-Toolbox-Python [Official Link](https://github.com/petercorke/robotics-toolbox-python)
 * Robotics Library [GitHub Page](https://github.com/roboticslibrary/rl)
