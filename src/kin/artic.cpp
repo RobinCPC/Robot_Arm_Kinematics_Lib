@@ -57,6 +57,9 @@ Artic::Artic()
   /* Initialize rest variable */
   ini_theta_ = VectorX::Constant(this->getDOF(), 1, 0.0);
   pre_theta_ = VectorX::Constant(this->getDOF(), 1, 0.0);
+#ifndef NDEBUG
+      printf("\n In Artic():\npre_theta_.norm is : %.4f\n", pre_theta_.norm());
+#endif
 
   base_tcp_tf_ = Matrix4::Identity();
 
@@ -113,6 +116,7 @@ Artic::Artic(
     const rb::math::VectorX& lowlimit0)
 {
   // check if size of all paremeter are the smae
+#if __cplusplus >= 201103L
   std::vector<VectorX> dh_list = {a0, alpha0, d0, ini_theta, uplimit0, lowlimit0};
   bool is_match = std::all_of(dh_list.begin(), dh_list.end(), [](VectorX& d)
           { return d.size() == 6;});
@@ -121,6 +125,16 @@ Artic::Artic(
     assert("Parameters size not match!\n");
     return;
   }
+#else
+  std::vector<VectorX> dh_list;
+  dh_list.push_back(a0);
+  dh_list.push_back(alpha0);
+  dh_list.push_back(d0);
+  dh_list.push_back(ini_theta);
+  dh_list.push_back(uplimit0);
+  dh_list.push_back(lowlimit0);
+  // TODO: check if the size of element has 6 sub element
+#endif
 
   /*initialize Modified DH-Table*/
   for (int i=0; i < a0.size(); ++i)
@@ -732,13 +746,17 @@ IK_RESULT Artic::solutionCheck(ArmAxisValue& sols)
 
   // using cosine similarity to check which solutions is most closest to previous step join value
   sols.fit = 0;
-  std::array<double, 8> cosine_sim = {{-2.}};   // initialize smaller valus;
+  std::array<double, 8> cosine_sim = {{-2., -2., -2., -2., -2., -2., -2., -2.}};   // initialize smaller valus;
   for(int i=0; i < sols.axis_value.rows(); ++i)
   {
     if(sols.solution_check[i] == true && sols.limit_check[i] == true)
     {
       Eigen::VectorXd sol_theta = sols.axis_value.row(i);
       Eigen::VectorXd pre_theta = pre_theta_;
+#ifndef NDEBUG
+      printf("\nIn solutionCheck:\nsol_theta.norm is : %.4f\n", sol_theta.norm());
+      printf("pre_theta.norm is : %.4f\n", pre_theta.norm());
+#endif
       cosine_sim[i] = sol_theta.dot(pre_theta) /
         (sol_theta.norm() * pre_theta.norm());
 

@@ -31,10 +31,25 @@ std::ostream& operator<< (std::ostream& ost, const ArmPose& pose)
   };
 #endif
 
+#if __cplusplus >= 201103L
   ostrVec( ost, std::vector<char>({'x', 'y', 'z'}) );
   ostrVec( ost, std::vector<double>({pose.x, pose.y, pose.z}) );
   ostrVec( ost, std::vector<char>({'a', 'b', 'c'}) );
   ostrVec( ost, std::vector<double>({pose.a, pose.b, pose.c}) );
+#else
+  std::vector<char> charArray;
+  charArray.push_back('x'); charArray.push_back('y'); charArray.push_back('z');
+  ostrVec(ost, charArray);
+  std::vector<double> douArray;
+  douArray.push_back(pose.x); douArray.push_back(pose.y); douArray.push_back(pose.z); 
+  ostrVec(ost, douArray);
+  charArray.clear();
+  charArray.push_back('a'); charArray.push_back('b'); charArray.push_back('c');
+  ostrVec(ost, charArray);
+  douArray.clear();
+  douArray.push_back(pose.a); douArray.push_back(pose.b); douArray.push_back(pose.c); 
+  ostrVec(ost, douArray);
+#endif
   return ost;
 }
 

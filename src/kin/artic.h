@@ -40,7 +40,7 @@ public:
       std::vector<rb::kin::Link*>& links,                     //!< A vector of link that construct the articulated robot arm
       rb::math::Matrix4  base=rb::math::Matrix4::Identity(),  //!< HT matrix of robot base with respected to world coordination
       rb::math::Matrix4  tool=rb::math::Matrix4::Identity(),  //!< HT matrix of TCP with respected to robot flange (last joint)
-      rb::math::Vector3  gravity={0., 0., rb::math::GRAVITY}, //!< Gravity set as a vector.
+      rb::math::Vector3  gravity=rb::math::Vector3(0., 0., rb::math::GRAVITY), //!< Gravity set as a vector.
       std::string manufactor="None",                          //!< the name of manufactor of the robot
       std::string model="None"                                //!< the model of the robot named by its manufactor
       );

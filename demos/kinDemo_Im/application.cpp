@@ -7,6 +7,11 @@
 
 namespace MyApp
 {
+  std::unique_ptr<rb::kin::Artic> robot {new rb::kin::Artic};   // with C++11 support
+  //std::unique_ptr<rb::kin::Artic> robot = std::make_unique<rb::kin::Artic>();   // with C++14 support
+  rb::kin::ArmPose pose_tcp;
+  rb::kin::ArmAxisValue joint_value;
+
   void RenderUI()
   {
 
@@ -104,27 +109,29 @@ namespace MyApp
       ImGui::Begin("KinDemo", nullptr);
 
       // make dummy DH table by vector, vector float
-      static std::vector<std::vector<float>> kr5_table = {
-        {  0.0,  0., 339.,  0.,170,-170},
-        {  0.0, 90.,   0., 90., 45,-190},
-        {250.0,  0.,   0.,  0., 79,-209},
-        { 70.0, 90., 250.,  0.,190,-190},
-        {  0.0,-90.,   0.,  0.,120,-120},
-        {  0.0, 90.,  95.,  0.,350,-350}
+      static std::vector<std::vector<float>> dh_table = {
+        // a   alpha  d  theta up  down
+        {  0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+        {  0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+        {  0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+        {  0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+        {  0.0,  0.0,  0.0,  0.0,  0.0,  0.0},
+        {  0.0,  0.0,  0.0,  0.0,  0.0,  0.0}
       };
       static std::vector<std::vector<float>> sol_table = {
-        {  0.0,  0.,  39.,  0.,  170,  170},
-        {  0.0, 90.,   0., 90.,   45,  190},
-        {  0.0,  0.,   0.,  0.,   79,  209},
-        {  0.0, 90.,   0.,  0.,   90,  190},
-        {  0.0,-90.,   0.,  0.,   20,   20},
-        {  0.0,  0.,  50.,  0.,   90,   90},
-        {  0.0, 90.,   0.,  0.,   90,   90},
-        {  0.0,  0.,   5.,  0.,  350,   50}
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}, // sol 1
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}, // sol 2
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}, // sol 3
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}, // sol 4
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}, // sol 5
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}, // sol 6
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}, // sol 7
+        {  0.0,  0.0,   0.0,   0.0,    0.0,    0.0}  // sol 8
       };
       static float cart_inp[3] = { 0.0, 0.0, 0.0 };
       static float coor_inp[3] = { 0.0, 0.0, 0.0 };
 
+      static char ik_result_str[128] = "Initial";
       const char* sol_combText[] = {"solution_1", "solution_2", "solution_3", "solution_4",
                                   "solution_5", "solution_6", "solution_7", "solution_8"};
       static int sol_current_idx = 0;
@@ -155,22 +162,21 @@ namespace MyApp
           }
 
           // Draw our contents
-          static float dummy_f = 0.0f;
           ImGui::PushID(row);
           ImGui::TableSetColumnIndex(0);
           ImGui::Text("Joint %d", row);
           ImGui::TableSetColumnIndex(1);
-          ImGui::InputFloat("##a", &kr5_table[row][0], 0.0f, 1.0f, "%.2f");
+          ImGui::InputFloat("##a", &dh_table[row][0], 0.0f, 1.0f, "%.2f");
           ImGui::TableSetColumnIndex(2);
-          ImGui::InputFloat("##alpha", &kr5_table[row][1], 0.0f, 1.0f, "%.2f");
+          ImGui::InputFloat("##alpha", &dh_table[row][1], 0.0f, 1.0f, "%.2f");
           ImGui::TableSetColumnIndex(3);
-          ImGui::InputFloat("##d", &kr5_table[row][2], 0.0f, 1.0f, "%.2f");
+          ImGui::InputFloat("##d", &dh_table[row][2], 0.0f, 1.0f, "%.2f");
           ImGui::TableSetColumnIndex(4);
-          ImGui::InputFloat("##theta", &kr5_table[row][3], 0.0f, 1.0f, "%.2f");
+          ImGui::InputFloat("##theta", &dh_table[row][3], 0.0f, 1.0f, "%.2f");
           ImGui::TableSetColumnIndex(5);
-          ImGui::InputFloat("##up", &kr5_table[row][4], 0.0f, 1.0f, "%.2f");
+          ImGui::InputFloat("##up", &dh_table[row][4], 0.0f, 1.0f, "%.2f");
           ImGui::TableSetColumnIndex(6);
-          ImGui::InputFloat("##down", &kr5_table[row][5], 0.0f, 1.0f, "%.2f");
+          ImGui::InputFloat("##down", &dh_table[row][5], 0.0f, 1.0f, "%.2f");
           ImGui::PopID();
         }
         ImGui::EndTable();
@@ -178,12 +184,129 @@ namespace MyApp
       ImGui::SameLine();
 
       ImGui::BeginGroup(); // Lock X position
-      if (ImGui::Button("Initial_KR5")) { kr5_table[0][3] += 1.0; } ImGui::SameLine();
-      if (ImGui::Button("Reset_Config")) { kr5_table[1][3] += 1.0; }
-      if (ImGui::Button("Forward_Kin")) { kr5_table[2][3] += 1.0; } ImGui::SameLine();
-      if (ImGui::Button("Inversed_Kin")) { kr5_table[3][3] += 1.0; }
+      if (ImGui::Button("Initial_KR5"))
+      { // Btn Init Callback
+        if( robot == nullptr) // initial robot first
+        {
+          //robot = std::make_unique<rb::kin::Artic>();
+          robot = std::unique_ptr<rb::kin::Artic> {new rb::kin::Artic};
+        }
+        rb::math::VectorX a0 = robot->getA();
+        rb::math::VectorX al0 = robot->getAlpha();
+        rb::math::VectorX d0 = robot->getD();
+        rb::math::VectorX th0 = robot->getTheta();
+        rb::math::VectorX up0 = robot->getUpLimit();
+        rb::math::VectorX low0 = robot->getLowLimit();
+
+        for(int jn=0; jn < 6; jn++)
+        {
+          dh_table[jn][0] = a0[jn];
+          dh_table[jn][1] = al0[jn];
+          dh_table[jn][2] = d0[jn];
+          dh_table[jn][3] = th0[jn];
+          dh_table[jn][4] = up0[jn];
+          dh_table[jn][5] = low0[jn];
+        }
+      } ImGui::SameLine();
+      if (ImGui::Button("Reset_Config")) 
+      {
+        // get data from dhTable
+        int num_row = dh_table.size(); //(ui->dhTableWidget->rowCount());
+
+        rb::math::VectorX a0(num_row);
+        rb::math::VectorX alpha0(num_row);
+        rb::math::VectorX d0(num_row);
+        rb::math::VectorX th0(num_row);
+        rb::math::VectorX up0(num_row);
+        rb::math::VectorX low0(num_row);
+
+        for (int i = 0; i < num_row; ++i)
+        {
+          // get link length A from ui
+          a0[i] = dh_table[i][0];
+
+          // get link twist(alpha) from ui
+          alpha0[i] = dh_table[i][1];
+
+          // get link offset (d) from ui
+          d0[i] = dh_table[i][2];
+
+          // get joint angle (theta) form ui
+          th0[i] = dh_table[i][3];
+
+          // get limits from ui
+          up0[i] = dh_table[i][4];
+          low0[i] = dh_table[i][5];
+        }
+
+        robot = std::unique_ptr<rb::kin::Artic>{new rb::kin::Artic(a0, alpha0, d0,
+                                                                   th0, up0, low0)};
+      }
+      if (ImGui::Button("Forward_Kin"))
+      {
+        rb::math::VectorX th(6);
+        th << dh_table[0][3], dh_table[1][3], dh_table[2][3],
+              dh_table[3][3], dh_table[4][3], dh_table[5][3];
+
+        pose_tcp = robot->forwardKin(th);
+
+        // output to ui
+        cart_inp[0] = pose_tcp.x;
+        cart_inp[1] = pose_tcp.y;
+        cart_inp[2] = pose_tcp.z;
+        coor_inp[0] = pose_tcp.c;
+        coor_inp[1] = pose_tcp.b;
+        coor_inp[2] = pose_tcp.a;
+      } ImGui::SameLine();
+      if (ImGui::Button("Inversed_Kin"))
+      {
+        // get tcp position & orientation from ui
+        double px = cart_inp[0];
+        double py = cart_inp[1];
+        double pz = cart_inp[2];
+
+        double row = coor_inp[2];
+        double pitch = coor_inp[1];
+        double yaw = coor_inp[0];
+
+        rb::math::VectorX q(robot->getDOF());
+        rb::kin::IK_RESULT check = robot->inverseKin(px, py, pz, row, pitch,
+                                                     yaw, q, joint_value);
+
+        switch (check)
+        {
+        case rb::kin::IK_RESULT::IK_COMPLETE:
+          // ik_result_str = "Find Solutions.";
+          std::strncpy(ik_result_str, "Find Solutions.", sizeof(ik_result_str) - 1);
+          break;
+        case rb::kin::IK_RESULT::IK_NO_SOLUTION:
+          std::strncpy(ik_result_str, "No Solutions.", sizeof(ik_result_str) - 1);
+          break;
+        case rb::kin::IK_RESULT::IK_ANGLE_LIMIT:
+          std::strncpy(ik_result_str, "Joint Limit.", sizeof(ik_result_str) - 1);
+          break;
+        case rb::kin::IK_RESULT::IK_SINGULAR:
+          std::strncpy(ik_result_str, "Singular Point Reach!.", sizeof(ik_result_str) - 1);
+          break;
+        case rb::kin::IK_RESULT::IK_INPUT_INVALID:
+          std::strncpy(ik_result_str, "Input Invalid!.", sizeof(ik_result_str) - 1);
+          break;
+        }
+        ik_result_str[sizeof(ik_result_str) - 1] = '\0'; // Ensure null-termination
+
+        // show most fit solution.
+        sol_current_idx = joint_value.fit;
+
+        // output all solutions to ui.
+        for (int row = 0; row < 8; ++row)
+        {
+          for (int col = 0; col < 6; ++col)
+          {
+            sol_table[row][col] = joint_value.axis_value(row, col);
+          }
+        }
+      }
       ImGui::SeparatorText("TCP");
-      //ImGui::Separator();
 
       ImGui::Columns(3);  // Divide the layout into columns
 
@@ -214,13 +337,13 @@ namespace MyApp
       ImGui::Separator();
 
       ImGui::Indent(20.0f);
-      ImGui::TextColored( ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Find Solution %s", sol_combText[sol_current_idx]);
+      ImGui::TextColored( ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Result: %s", ik_result_str);
       ImGui::Unindent();
 
       static ImGuiComboFlags comb_flags = 0;
       //comb_flags &= ImGuiComboFlags_PopupAlignLeft;
       ImGui::SetNextItemWidth(150.0f);
-      if (ImGui::BeginCombo("Best Sol", combo_preview_value, comb_flags))
+      if (ImGui::BeginCombo("Best Fit", combo_preview_value, comb_flags))
       {
         for (int n = 0; n < IM_ARRAYSIZE(sol_combText); n++)
         {

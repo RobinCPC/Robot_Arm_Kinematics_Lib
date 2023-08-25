@@ -32,6 +32,10 @@
 build
 bin
 
+# 3rd party source
+demos/kinDemo_Im/imgui
+demos/kinDemo_Im/web
+
 # IDE project setting
 *.user
 

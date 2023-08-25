@@ -113,7 +113,7 @@ public:
       std::vector<rb::kin::Link*>& links,
       rb::math::Matrix4  base=rb::math::Matrix4::Identity(),
       rb::math::Matrix4  tool=rb::math::Matrix4::Identity(),
-      rb::math::Vector3  gravity={0., 0., rb::math::GRAVITY},
+      rb::math::Vector3  gravity=rb::math::Vector3(0., 0., rb::math::GRAVITY),
       std::string manufactor="None",
       std::string model="None"
       );

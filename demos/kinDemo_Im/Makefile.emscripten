@@ -23,12 +23,15 @@ SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
-CPPFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
+CPPFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -DNDEBUG
 LDFLAGS =
 EMS =
 
 # Additional source for My app
+KIN_DIR = ../../src
 SOURCES += application.cpp
+SOURCES += $(KIN_DIR)/kin/link.cpp $(KIN_DIR)/kin/kinematic_chain.cpp $(KIN_DIR)/kin/artic.cpp
+CXXFLAGS += -I../../src -I/usr/local/include/eigen3
 
 ##---------------------------------------------------------------------
 ## EMSCRIPTEN OPTIONS
@@ -76,6 +79,9 @@ LDFLAGS += $(EMS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(KIN_DIR)/kin/%.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 all: $(EXE)

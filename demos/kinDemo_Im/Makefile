@@ -23,12 +23,16 @@ OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
-CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
+CXXFLAGS = -std=c++14 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends #-DNDEBUG
 CXXFLAGS += -g -Wall -Wformat
 LIBS =
 
-# Additional source for My app
+# Additional source for My app, and rbkin libray
+KIN_DIR = ../../src
 SOURCES += application.cpp
+SOURCES += $(KIN_DIR)/kin/link.cpp $(KIN_DIR)/kin/kinematic_chain.cpp $(KIN_DIR)/kin/artic.cpp
+CXXFLAGS += -I../../src -I/usr/local/include/eigen3
+#LIBS += -L../../build -lrbkin
 
 ##---------------------------------------------------------------------
 ## OPENGL ES
@@ -80,6 +84,9 @@ endif
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(KIN_DIR)/kin/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 all: $(EXE)
