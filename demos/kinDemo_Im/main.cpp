@@ -122,7 +122,7 @@ int main(int, char**)
     //IM_ASSERT(font != nullptr);
 
     // Our state
-    bool show_demo_window = true;
+    bool show_demo_window = false;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -148,6 +148,10 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // My app goes here
+        MyApp::RenderUI();
+
+
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
@@ -157,6 +161,7 @@ int main(int, char**)
             static float f = 0.0f;
             static int counter = 0;
 
+            ImGui::SetNextWindowPos(ImVec2(700, 500), ImGuiCond_Once);
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
@@ -186,10 +191,6 @@ int main(int, char**)
         }
         /*
         */
-
-        // My app goes here
-        MyApp::RenderUI();
-
 
         // Rendering
         ImGui::Render();

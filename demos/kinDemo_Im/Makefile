@@ -16,14 +16,16 @@
 
 EXE = kinDemo_Im
 IMGUI_DIR = ./imgui
+GUIZMO_DIR = ./ImGuizmo
 SOURCES = main.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+SOURCES += ${GUIZMO_DIR}/ImGuizmo.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
-CXXFLAGS = -std=c++14 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends #-DNDEBUG
+CXXFLAGS = -std=c++14 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I${GUIZMO_DIR} #-DNDEBUG
 CXXFLAGS += -g -Wall -Wformat
 LIBS =
 
@@ -31,7 +33,7 @@ LIBS =
 KIN_DIR = ../../src
 SOURCES += application.cpp
 SOURCES += $(KIN_DIR)/kin/link.cpp $(KIN_DIR)/kin/kinematic_chain.cpp $(KIN_DIR)/kin/artic.cpp
-CXXFLAGS += -I../../src -I/usr/local/include/eigen3
+CXXFLAGS += -I${KIN_DIR} -I/usr/local/include/eigen3
 #LIBS += -L../../build -lrbkin
 
 ##---------------------------------------------------------------------
@@ -84,6 +86,9 @@ endif
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(GUIZMO_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(KIN_DIR)/kin/%.cpp

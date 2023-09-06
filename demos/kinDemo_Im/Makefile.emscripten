@@ -18,12 +18,14 @@ CXX = em++
 WEB_DIR = web
 EXE = $(WEB_DIR)/index.html
 IMGUI_DIR = ./imgui
+GUIZMO_DIR = ./ImGuizmo
 SOURCES = main.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+SOURCES += ${GUIZMO_DIR}/ImGuizmo.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
-CPPFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -DNDEBUG
+CPPFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I${GUIZMO_DIR} -DNDEBUG
 LDFLAGS =
 EMS =
 
@@ -31,7 +33,7 @@ EMS =
 KIN_DIR = ../../src
 SOURCES += application.cpp
 SOURCES += $(KIN_DIR)/kin/link.cpp $(KIN_DIR)/kin/kinematic_chain.cpp $(KIN_DIR)/kin/artic.cpp
-CXXFLAGS += -I../../src -I/usr/local/include/eigen3
+CXXFLAGS += -I${KIN_DIR} -I/usr/local/include/eigen3
 
 ##---------------------------------------------------------------------
 ## EMSCRIPTEN OPTIONS
@@ -79,6 +81,9 @@ LDFLAGS += $(EMS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(GUIZMO_DIR)/%.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(KIN_DIR)/kin/%.cpp

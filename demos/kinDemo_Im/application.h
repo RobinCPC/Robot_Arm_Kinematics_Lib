@@ -10,4 +10,5 @@ namespace MyApp
   extern std::unique_ptr<rb::kin::Artic> robot;
   extern rb::kin::ArmPose pose_tcp;
   extern rb::kin::ArmAxisValue joint_value;
+  extern bool show_gizmo_window;
 }
