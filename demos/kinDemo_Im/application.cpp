@@ -586,7 +586,7 @@ namespace MyApp
   //std::unique_ptr<rb::kin::Artic> robot = std::make_unique<rb::kin::Artic>();   // with C++14 support
   rb::kin::ArmPose pose_tcp;
   rb::kin::ArmAxisValue joint_value;
-  bool show_gizmo_window = false;
+  bool show_gizmo_window = true;
 
   // Initial setting for ImGuizmo
   int lastUsing = 0;

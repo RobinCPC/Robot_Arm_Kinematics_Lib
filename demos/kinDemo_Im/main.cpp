@@ -121,6 +121,15 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
 
+    // Load ini (docking layout)
+#ifdef __EMSCRIPTEN__
+    static std::string const s_ImguiIniFilePath = "/Ini/imgui_base.ini";
+#else
+    static std::string const s_ImguiIniFilePath = "./Ini/imgui_base.ini";
+#endif
+    ImGui::LoadIniSettingsFromDisk(s_ImguiIniFilePath.c_str());
+    //io.IniFilename = s_UserImguiIniFilePath.c_str();                     // uncomment if want to overwrite default layout setting
+
     // Our state
     bool show_demo_window = false;
     bool show_another_window = false;
