@@ -25,7 +25,7 @@ SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui
 SOURCES += ${GUIZMO_DIR}/ImGuizmo.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
-CPPFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I${GUIZMO_DIR} -DNDEBUG
+CPPFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I${GUIZMO_DIR} #-DNDEBUG
 LDFLAGS =
 EMS =
 

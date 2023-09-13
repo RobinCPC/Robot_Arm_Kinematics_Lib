@@ -177,6 +177,12 @@ public:
    */
   rb::math::VectorX getLowLimit(void) const;
 
+  /*!
+   * @brief Get the position and orientation of the certain robot joint.
+   * @return  ArmPose
+   */
+  rb::kin::ArmPose getJointPos(const int& jnt);
+
 protected:
   /*! Link length data member of modified D-H parameter for robot arm */
   rb::math::VectorX a;                          //!< Link length (mm)

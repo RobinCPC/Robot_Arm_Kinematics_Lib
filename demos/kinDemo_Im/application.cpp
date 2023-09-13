@@ -12,28 +12,31 @@ bool useWindow = true;
 int gizmoCount = 1;
 float camDistance = 8.f;
 static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
+static ImDrawList* g_drawlist;
+static float g_mX, g_mY, g_mWidth, g_mHeight;
+
 
 float objectMatrix[4][16] =
 {
   { 1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
-    0.f, 0.f, 0.f, 1.f },
+    0.f, 0.f, 3.f, 1.f },
 
   { 1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
-    2.f, 0.f, 0.f, 1.f },
+    2.f, 0.f, 3.f, 1.f },
 
   { 1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
-    2.f, 0.f, 2.f, 1.f },
+    2.f, 0.f, 5.f, 1.f },
 
   { 1.f, 0.f, 0.f, 0.f,
     0.f, 1.f, 0.f, 0.f,
     0.f, 0.f, 1.f, 0.f,
-    0.f, 0.f, 2.f, 1.f }
+    0.f, 0.f, 5.f, 1.f }
 };
 
 static const float identityMatrix[16] =
@@ -42,6 +45,29 @@ static const float identityMatrix[16] =
   0.f, 0.f, 1.f, 0.f,
   0.f, 0.f, 0.f, 1.f
 };
+
+void FPU_MatrixF_x_MatrixF(const float *a, const float *b, float *r)
+{
+  r[0] = a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12];
+  r[1] = a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13];
+  r[2] = a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14];
+  r[3] = a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15];
+
+  r[4] = a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12];
+  r[5] = a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13];
+  r[6] = a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14];
+  r[7] = a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15];
+
+  r[8] = a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12];
+  r[9] = a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13];
+  r[10] = a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14];
+  r[11] = a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15];
+
+  r[12] = a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12];
+  r[13] = a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13];
+  r[14] = a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14];
+  r[15] = a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15];
+}
 
 void Frustum(float left, float right, float bottom, float top, float znear, float zfar, float* m16)
 {
@@ -66,6 +92,297 @@ void Frustum(float left, float right, float bottom, float top, float znear, floa
    m16[13] = 0.0;
    m16[14] = (-temp * zfar) / temp4;
    m16[15] = 0.0;
+}
+
+struct matrix_t;
+struct vec_t
+{
+public:
+   float x, y, z, w;
+
+   void Lerp(const vec_t& v, float t)
+   {
+      x += (v.x - x) * t;
+      y += (v.y - y) * t;
+      z += (v.z - z) * t;
+      w += (v.w - w) * t;
+   }
+
+   void Set(float v) { x = y = z = w = v; }
+   void Set(float _x, float _y, float _z = 0.f, float _w = 0.f) { x = _x; y = _y; z = _z; w = _w; }
+
+   vec_t& operator -= (const vec_t& v) { x -= v.x; y -= v.y; z -= v.z; w -= v.w; return *this; }
+   vec_t& operator += (const vec_t& v) { x += v.x; y += v.y; z += v.z; w += v.w; return *this; }
+   vec_t& operator *= (const vec_t& v) { x *= v.x; y *= v.y; z *= v.z; w *= v.w; return *this; }
+   vec_t& operator *= (float v) { x *= v;    y *= v;    z *= v;    w *= v;    return *this; }
+
+   vec_t operator * (float f) const;
+   vec_t operator - () const;
+   vec_t operator - (const vec_t& v) const;
+   vec_t operator + (const vec_t& v) const;
+   vec_t operator * (const vec_t& v) const;
+
+   const vec_t& operator + () const { return (*this); }
+   float Length() const { return sqrtf(x * x + y * y + z * z); };
+   float LengthSq() const { return (x * x + y * y + z * z); };
+   vec_t Normalize() { (*this) *= (1.f / ( Length() > FLT_EPSILON ? Length() : FLT_EPSILON ) ); return (*this); }
+   vec_t Normalize(const vec_t& v) { this->Set(v.x, v.y, v.z, v.w); this->Normalize(); return (*this); }
+   vec_t Abs() const;
+
+   void Cross(const vec_t& v)
+   {
+      vec_t res;
+      res.x = y * v.z - z * v.y;
+      res.y = z * v.x - x * v.z;
+      res.z = x * v.y - y * v.x;
+
+      x = res.x;
+      y = res.y;
+      z = res.z;
+      w = 0.f;
+   }
+
+   void Cross(const vec_t& v1, const vec_t& v2)
+   {
+      x = v1.y * v2.z - v1.z * v2.y;
+      y = v1.z * v2.x - v1.x * v2.z;
+      z = v1.x * v2.y - v1.y * v2.x;
+      w = 0.f;
+   }
+
+   float Dot(const vec_t& v) const
+   {
+      return (x * v.x) + (y * v.y) + (z * v.z) + (w * v.w);
+   }
+
+   float Dot3(const vec_t& v) const
+   {
+      return (x * v.x) + (y * v.y) + (z * v.z);
+   }
+
+   void Transform(const matrix_t& matrix);
+   void Transform(const vec_t& s, const matrix_t& matrix);
+
+   void TransformVector(const matrix_t& matrix);
+   void TransformPoint(const matrix_t& matrix);
+   void TransformVector(const vec_t& v, const matrix_t& matrix) { (*this) = v; this->TransformVector(matrix); }
+   void TransformPoint(const vec_t& v, const matrix_t& matrix) { (*this) = v; this->TransformPoint(matrix); }
+
+   float& operator [] (size_t index) { return ((float*)&x)[index]; }
+   const float& operator [] (size_t index) const { return ((float*)&x)[index]; }
+   bool operator!=(const vec_t& other) const { return memcmp(this, &other, sizeof(vec_t)) != 0; }
+};
+
+vec_t makeVect(float _x, float _y, float _z = 0.f, float _w = 0.f) { vec_t res; res.x = _x; res.y = _y; res.z = _z; res.w = _w; return res; }
+vec_t makeVect(ImVec2 v) { vec_t res; res.x = v.x; res.y = v.y; res.z = 0.f; res.w = 0.f; return res; }
+vec_t vec_t::operator * (float f) const { return makeVect(x * f, y * f, z * f, w * f); }
+vec_t vec_t::operator - () const { return makeVect(-x, -y, -z, -w); }
+vec_t vec_t::operator - (const vec_t& v) const { return makeVect(x - v.x, y - v.y, z - v.z, w - v.w); }
+vec_t vec_t::operator + (const vec_t& v) const { return makeVect(x + v.x, y + v.y, z + v.z, w + v.w); }
+vec_t vec_t::operator * (const vec_t& v) const { return makeVect(x * v.x, y * v.y, z * v.z, w * v.w); }
+vec_t vec_t::Abs() const { return makeVect(fabsf(x), fabsf(y), fabsf(z)); }
+
+struct matrix_t
+{
+public:
+  union
+  {
+    float m[4][4];
+    float m16[16];
+    struct
+    {
+      vec_t right, up, dir, position;
+    } v;
+    vec_t component[4];
+  };
+
+  operator float *() { return m16; }
+  operator const float *() const { return m16; }
+  void Translation(float _x, float _y, float _z) { this->Translation(makeVect(_x, _y, _z)); }
+
+  void Translation(const vec_t &vt)
+  {
+    v.right.Set(1.f, 0.f, 0.f, 0.f);
+    v.up.Set(0.f, 1.f, 0.f, 0.f);
+    v.dir.Set(0.f, 0.f, 1.f, 0.f);
+    v.position.Set(vt.x, vt.y, vt.z, 1.f);
+  }
+
+  void Scale(float _x, float _y, float _z)
+  {
+    v.right.Set(_x, 0.f, 0.f, 0.f);
+    v.up.Set(0.f, _y, 0.f, 0.f);
+    v.dir.Set(0.f, 0.f, _z, 0.f);
+    v.position.Set(0.f, 0.f, 0.f, 1.f);
+  }
+  void Scale(const vec_t &s) { Scale(s.x, s.y, s.z); }
+
+  matrix_t &operator*=(const matrix_t &mat)
+  {
+    matrix_t tmpMat;
+    tmpMat = *this;
+    tmpMat.Multiply(mat);
+    *this = tmpMat;
+    return *this;
+  }
+  matrix_t operator*(const matrix_t &mat) const
+  {
+    matrix_t matT;
+    matT.Multiply(*this, mat);
+    return matT;
+  }
+
+  void Multiply(const matrix_t &matrix)
+  {
+    matrix_t tmp;
+    tmp = *this;
+
+    FPU_MatrixF_x_MatrixF((float *)&tmp, (float *)&matrix, (float *)this);
+  }
+
+  void Multiply(const matrix_t &m1, const matrix_t &m2)
+  {
+    FPU_MatrixF_x_MatrixF((float *)&m1, (float *)&m2, (float *)this);
+  }
+
+  float GetDeterminant() const
+  {
+    return m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] + m[0][2] * m[1][0] * m[2][1] -
+           m[0][2] * m[1][1] * m[2][0] - m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
+  }
+
+  float Inverse(const matrix_t &srcMatrix, bool affine = false);
+  void SetToIdentity()
+  {
+    v.right.Set(1.f, 0.f, 0.f, 0.f);
+    v.up.Set(0.f, 1.f, 0.f, 0.f);
+    v.dir.Set(0.f, 0.f, 1.f, 0.f);
+    v.position.Set(0.f, 0.f, 0.f, 1.f);
+  }
+  void Transpose()
+  {
+    matrix_t tmpm;
+    for (int l = 0; l < 4; l++)
+    {
+      for (int c = 0; c < 4; c++)
+      {
+        tmpm.m[l][c] = m[c][l];
+      }
+    }
+    (*this) = tmpm;
+  }
+
+  void RotationAxis(const vec_t &axis, float angle);
+
+  void OrthoNormalize()
+  {
+    v.right.Normalize();
+    v.up.Normalize();
+    v.dir.Normalize();
+  }
+};
+
+void vec_t::Transform(const matrix_t& matrix)
+{
+   vec_t out;
+
+   out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0] + w * matrix.m[3][0];
+   out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1] + w * matrix.m[3][1];
+   out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2] + w * matrix.m[3][2];
+   out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3] + w * matrix.m[3][3];
+
+   x = out.x;
+   y = out.y;
+   z = out.z;
+   w = out.w;
+}
+
+void vec_t::Transform(const vec_t& s, const matrix_t& matrix)
+{
+   *this = s;
+   Transform(matrix);
+}
+
+void vec_t::TransformPoint(const matrix_t& matrix)
+{
+   vec_t out;
+
+   out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0] + matrix.m[3][0];
+   out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1] + matrix.m[3][1];
+   out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2] + matrix.m[3][2];
+   out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3] + matrix.m[3][3];
+
+   x = out.x;
+   y = out.y;
+   z = out.z;
+   w = out.w;
+}
+
+void vec_t::TransformVector(const matrix_t& matrix)
+{
+   vec_t out;
+
+   out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0];
+   out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1];
+   out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2];
+   out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3];
+
+   x = out.x;
+   y = out.y;
+   z = out.z;
+   w = out.w;
+}
+
+ImVec2 worldToPos(const vec_t &worldPos, const matrix_t &mat, ImVec2 position = ImVec2(g_mX, g_mY), ImVec2 size = ImVec2(g_mWidth, g_mHeight))
+{
+  vec_t trans;
+  trans.TransformPoint(worldPos, mat);
+  trans *= 0.5f / trans.w;
+  trans += makeVect(0.5f, 0.5f);
+  trans.y = 1.f - trans.y;
+  trans.x *= size.x;
+  trans.y *= size.y;
+  trans.x += position.x;
+  trans.y += position.y;
+  return ImVec2(trans.x, trans.y);
+}
+
+void ComputeFrustumPlanes(vec_t *frustum, const float *clip)
+{
+  frustum[0].x = clip[3] - clip[0];
+  frustum[0].y = clip[7] - clip[4];
+  frustum[0].z = clip[11] - clip[8];
+  frustum[0].w = clip[15] - clip[12];
+
+  frustum[1].x = clip[3] + clip[0];
+  frustum[1].y = clip[7] + clip[4];
+  frustum[1].z = clip[11] + clip[8];
+  frustum[1].w = clip[15] + clip[12];
+
+  frustum[2].x = clip[3] + clip[1];
+  frustum[2].y = clip[7] + clip[5];
+  frustum[2].z = clip[11] + clip[9];
+  frustum[2].w = clip[15] + clip[13];
+
+  frustum[3].x = clip[3] - clip[1];
+  frustum[3].y = clip[7] - clip[5];
+  frustum[3].z = clip[11] - clip[9];
+  frustum[3].w = clip[15] - clip[13];
+
+  frustum[4].x = clip[3] - clip[2];
+  frustum[4].y = clip[7] - clip[6];
+  frustum[4].z = clip[11] - clip[10];
+  frustum[4].w = clip[15] - clip[14];
+
+  frustum[5].x = clip[3] + clip[2];
+  frustum[5].y = clip[7] + clip[6];
+  frustum[5].z = clip[11] + clip[10];
+  frustum[5].w = clip[15] + clip[14];
+
+  for (int i = 0; i < 6; i++)
+  {
+    frustum[i].Normalize();
+  }
 }
 
 void Perspective(float fovyInDegrees, float aspectRatio, float znear, float zfar, float* m16)
@@ -234,6 +551,11 @@ void EditTransform(float* cameraView, float* cameraProjection, float* matrix, bo
       ImGuizmo::SetDrawlist();
       float windowWidth = (float)ImGui::GetWindowWidth();
       float windowHeight = (float)ImGui::GetWindowHeight();
+      g_drawlist = ImGui::GetWindowDrawList();
+      g_mWidth = windowWidth;
+      g_mHeight = windowHeight;
+      g_mX = ImGui::GetWindowPos().x;
+      g_mY = ImGui::GetWindowPos().y;
       ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
       viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
       viewManipulateTop = ImGui::GetWindowPos().y;
@@ -608,6 +930,15 @@ namespace MyApp
         coor_inp[0] = pose_tcp.c;
         coor_inp[1] = pose_tcp.b;
         coor_inp[2] = pose_tcp.a;
+
+#ifndef NDEBUG
+        // get pose of jnt
+        for (int i = 0; i < robot->getDOF(); ++i)
+        {
+          rb::kin::ArmPose jnt_pos = robot->getJointPos(i);
+          printf("Cartesian of Joint #%d: %.3f, %.3f, %.3f\n", i, jnt_pos.x, jnt_pos.y, jnt_pos.z);
+        }
+#endif
       } ImGui::SameLine();
       if (ImGui::Button("Inversed_Kin"))
       {
@@ -746,7 +1077,35 @@ namespace MyApp
         ImGui::EndTable();
       }
 
-      ImGui::End();
+      if (show_gizmo_window && g_drawlist)
+      {
+        // try to draw Links with ImGuizmo
+        ImU32 link_color = ImGui::GetColorU32(ImVec4(1.0f, 0.5f, 0.0f, 1.0f));
+        ImU32 jnt_color = ImGui::GetColorU32(ImVec4(0.3f, 0.16, 0.8f, 1.0f));
+        matrix_t viewProjection = *(matrix_t *)cameraView * *(matrix_t *)cameraProjection;
+        vec_t frustum[6];
+        ComputeFrustumPlanes(frustum, viewProjection.m16);
+        matrix_t res = *(matrix_t *)identityMatrix * viewProjection;
+
+        // Get postion of each joint and store in vec_t
+        rb::kin::ArmPose jnt_pos[6];
+        vec_t jnt_xyz[robot->getDOF() + 1];
+        jnt_xyz[0] = makeVect(0.f, 0.f, 0.f);   // Add origin (base location).
+        for (int i = 0; i < robot->getDOF(); ++i)
+        {
+          jnt_pos[i] = robot->getJointPos(i);
+          jnt_xyz[i+1] = makeVect(jnt_pos[i].y / 250.f, jnt_pos[i].z / 250.f, jnt_pos[i].x / 250.f);
+          // draw links
+          g_drawlist->AddLine(worldToPos(jnt_xyz[i], res), worldToPos(jnt_xyz[i+1], res), link_color, 8.0f);
+        }
+        for (auto& i : jnt_xyz)
+        { // draw joints
+          g_drawlist->AddCircleFilled(worldToPos(i, res), 6, jnt_color);
+        }
+        //g_drawlist->AddLine(ImVec2(150.5f, 200.5f), ImVec2(500.0f, 500.0f), line_color, 5.0f);
+      }
+
+      ImGui::End();   // Begin KinDemo
     }
 
     //ImGui::End();   // DockSpace Demo

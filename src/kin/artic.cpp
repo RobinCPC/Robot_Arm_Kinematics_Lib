@@ -855,6 +855,20 @@ rb::math::VectorX Artic::getLowLimit(void) const
   return this->low_lim_;
 }
 
+ rb::kin::ArmPose Artic::getJointPos(const int& jnt)
+ {
+  ArmPose jntPos;
+  /* calculate xyzabc */
+  jntPos.x = (*(this->frames_[jnt]))(0, 3);
+  jntPos.y = (*(this->frames_[jnt]))(1, 3);
+  jntPos.z = (*(this->frames_[jnt]))(2, 3);
+  tr2rpy(*(this->frames_[jnt]), jntPos.a, jntPos.b, jntPos.c);
+  jntPos.a = RAD2DEG * jntPos.a;
+  jntPos.b = RAD2DEG * jntPos.b;
+  jntPos.c = RAD2DEG * jntPos.c;
+  return jntPos;
+ }
+
 /********************************************************************************/
 /** \brief Rotation Matrix to Roll Pitch Yaw
  * A function to get roll, pitch, yaw from rotation matrix
