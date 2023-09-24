@@ -17,16 +17,18 @@
 EXE = kinDemo_Im
 IMGUI_DIR = ./imgui
 GUIZMO_DIR = ./ImGuizmo
+IMPLOT_DIR = ./implot
 SOURCES = main.cpp
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 SOURCES += ${GUIZMO_DIR}/ImGuizmo.cpp
+SOURCES += ${IMPLOT_DIR}/implot.cpp ${IMPLOT_DIR}/implot_items.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
-CXXFLAGS = -std=c++14 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I${GUIZMO_DIR} #-DNDEBUG
-CXXFLAGS += -g -Wall -Wformat
+CXXFLAGS = -std=c++14 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I${GUIZMO_DIR} -I${IMPLOT_DIR} #-DNDEBUG
+CXXFLAGS += -g #-Wint-in-bool-context #-Wall -Wformat
 LIBS =
 
 # Additional source for My app, and rbkin libray
@@ -89,6 +91,9 @@ endif
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(GUIZMO_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:$(IMPLOT_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:$(KIN_DIR)/kin/%.cpp

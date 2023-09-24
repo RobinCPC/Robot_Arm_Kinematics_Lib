@@ -4,8 +4,11 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "ImGuizmo.h"
+#include "implot.h"
 
 #include <vector>
+#include <math.h>
+#include "math/polynomial.h"
 
 
 bool useWindow = true;
@@ -580,6 +583,46 @@ void EditTransform(float* cameraView, float* cameraProjection, float* matrix, bo
    }
 }
 
+// utility structure for realtime plot
+struct ScrollingBuffer {
+    int MaxSize;
+    int Offset;
+    ImVector<ImVec2> Data;
+    ScrollingBuffer(int max_size = 2000) {
+        MaxSize = max_size;
+        Offset  = 0;
+        Data.reserve(MaxSize);
+    }
+    void AddPoint(float x, float y) {
+        if (Data.size() < MaxSize)
+            Data.push_back(ImVec2(x,y));
+        else {
+            Data[Offset] = ImVec2(x,y);
+            Offset =  (Offset + 1) % MaxSize;
+        }
+    }
+    void Erase() {
+        if (Data.size() > 0) {
+            Data.shrink(0);
+            Offset  = 0;
+        }
+    }
+};
+
+// Helper to display a little (?) mark which shows a tooltip when hovered.
+// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
 namespace MyApp
 {
   std::unique_ptr<rb::kin::Artic> robot {new rb::kin::Artic};   // with C++11 support
@@ -587,6 +630,8 @@ namespace MyApp
   rb::kin::ArmPose pose_tcp;
   rb::kin::ArmAxisValue joint_value;
   bool show_gizmo_window = true;
+  static bool isInitial = false;          // disable other buttons before press Initial.
+  static bool disable_in_move = false;    // disable button and callback while moving robot.
 
   // Initial setting for ImGuizmo
   int lastUsing = 0;
@@ -804,7 +849,7 @@ namespace MyApp
       static float cart_inp[3] = { 0.0, 0.0, 0.0 };
       static float coor_inp[3] = { 0.0, 0.0, 0.0 };
 
-      static char ik_result_str[128] = "Initial";
+      static char ik_result_str[128] = "Press \"Initial_KR5\" first";
       const char* sol_combText[] = {"solution_1", "solution_2", "solution_3", "solution_4",
                                   "solution_5", "solution_6", "solution_7", "solution_8"};
       static int sol_current_idx = 0;
@@ -857,6 +902,12 @@ namespace MyApp
       ImGui::SameLine();
 
       ImGui::BeginGroup(); // Lock X position
+      HelpMarker("Use \'Initial_KR5\' to set D-H Table as Kuka KR5. Also, you can adjust D-H Table by you self "
+                 "and use \'Reset_Config\' to set you own robot D-H Table.");
+      ImGui::SameLine();
+      if (disable_in_move)
+        ImGui::BeginDisabled();
+
       if (ImGui::Button("Initial_KR5"))
       { // Btn Init Callback
         if( robot == nullptr) // initial robot first
@@ -880,11 +931,16 @@ namespace MyApp
           dh_table[jn][4] = up0[jn];
           dh_table[jn][5] = low0[jn];
         }
+        isInitial = true;
       } ImGui::SameLine();
+
+      if (!isInitial)
+        ImGui::BeginDisabled();
+
       if (ImGui::Button("Reset_Config"))
       {
         // get data from dhTable
-        int num_row = dh_table.size(); //(ui->dhTableWidget->rowCount());
+        int num_row = dh_table.size();
 
         rb::math::VectorX a0(num_row);
         rb::math::VectorX alpha0(num_row);
@@ -915,6 +971,10 @@ namespace MyApp
         robot = std::unique_ptr<rb::kin::Artic>{new rb::kin::Artic(a0, alpha0, d0,
                                                                    th0, up0, low0)};
       }
+
+      HelpMarker("Press \'Forward_Kin\' will use joint angles (\'theta\' in D-H Table) to do FK once.\n"
+                 "Press \'Inversed_Kin\' will below TCP to do IK, but will not update theta values.");
+      ImGui::SameLine();
       if (ImGui::Button("Forward_Kin"))
       {
         rb::math::VectorX th(6);
@@ -930,15 +990,6 @@ namespace MyApp
         coor_inp[0] = pose_tcp.c;
         coor_inp[1] = pose_tcp.b;
         coor_inp[2] = pose_tcp.a;
-
-#ifndef NDEBUG
-        // get pose of jnt
-        for (int i = 0; i < robot->getDOF(); ++i)
-        {
-          rb::kin::ArmPose jnt_pos = robot->getJointPos(i);
-          printf("Cartesian of Joint #%d: %.3f, %.3f, %.3f\n", i, jnt_pos.x, jnt_pos.y, jnt_pos.z);
-        }
-#endif
       } ImGui::SameLine();
       if (ImGui::Button("Inversed_Kin"))
       {
@@ -960,6 +1011,13 @@ namespace MyApp
         case rb::kin::IK_RESULT::IK_COMPLETE:
           // ik_result_str = "Find Solutions.";
           std::strncpy(ik_result_str, "Find Solutions.", sizeof(ik_result_str) - 1);
+          // Update joints value by FK with most fit solution.
+          /*
+          robot->forwardKin(q);
+          for (int jn = 0; jn < 6; jn++)
+          {
+            dh_table[jn][3] = q[jn];
+          }*/
           break;
         case rb::kin::IK_RESULT::IK_NO_SOLUTION:
           std::strncpy(ik_result_str, "No Solutions.", sizeof(ik_result_str) - 1);
@@ -990,6 +1048,11 @@ namespace MyApp
       }
       ImGui::SeparatorText("TCP");
 
+      if (!isInitial)
+        ImGui::EndDisabled();
+      if (disable_in_move)
+        ImGui::EndDisabled();
+
       ImGui::Columns(3);  // Divide the layout into columns
 
       ImGui::PushItemWidth(65.0);
@@ -1018,7 +1081,7 @@ namespace MyApp
       ImGui::Columns(1); // Reset column layout
       ImGui::Separator();
 
-      ImGui::Indent(20.0f);
+      ImGui::Indent(10.0f);
       ImGui::TextColored( ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Result: %s", ik_result_str);
       ImGui::Unindent();
 
@@ -1040,7 +1103,7 @@ namespace MyApp
         ImGui::EndCombo();
       }
 
-      ImGui::Checkbox("Gizmo Window (Testing only)", &show_gizmo_window);      // Edit bools storing gizmo window open/close state
+      ImGui::Checkbox("3D TF Window (Gizmo)", &show_gizmo_window);      // Edit bools storing gizmo window open/close state
       ImGui::EndGroup();
       ImGui::Separator();
 
@@ -1076,6 +1139,261 @@ namespace MyApp
         }
         ImGui::EndTable();
       }
+      //ImGui::Separator();
+
+      static std::vector<float> jnt_end(6,0);
+      static std::vector<float> cart_end(6,0);
+      static std::vector<std::vector<double>> vec_jnt(6, std::vector<double>());
+      static std::vector<std::vector<double>> vec_cart(6, std::vector<double>());
+      static float jnt_dur = 2.0f;
+      static float tcp_dur = 2.0f;
+      static int fps = 60;
+
+      ImGui::Columns(2);  // Divide the layout into columns
+      ImGui::SetColumnWidth(0, 160);
+
+      ImGui::PushItemWidth(60.0);
+      ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+      if(ImGui::BeginTabBar("RobotControlTab", tab_bar_flags))
+      {
+        if(ImGui::BeginTabItem("JointFK"))
+        {
+          ImGui::Text("Do FK Continuely");
+          ImGui::InputFloat("Jnt1", &jnt_end[0]);
+          ImGui::InputFloat("Jnt2", &jnt_end[1]);
+          ImGui::InputFloat("Jnt3", &jnt_end[2]);
+          ImGui::InputFloat("Jnt4", &jnt_end[3]);
+          ImGui::InputFloat("Jnt5", &jnt_end[4]);
+          ImGui::InputFloat("Jnt6", &jnt_end[5]);
+
+          if (disable_in_move || !isInitial)
+            ImGui::BeginDisabled();
+
+          if (ImGui::Button("Move_Joints"))
+          {
+            // Callback: do trajectory planning with joint start and end, add result to a queue and FK at following loop until end of queue
+            std::vector<rb::math::Polynomial> traj_jnt(robot->getDOF());
+            rb::math::VectorX jnt_start = robot->getTheta();
+            for (int i=0; i < robot->getDOF(); i++)
+            {
+              traj_jnt[i] = rb::math::Polynomial(5);
+              std::vector<double> trj_start = {jnt_start[i], 0., 0.};
+              std::vector<double> trj_end = {jnt_end[i], 0., 0.};
+              traj_jnt[i].coeffQuintic(trj_start, trj_end, jnt_dur);
+              vec_jnt[i].empty();   // clear prevoius data point
+            }
+            for (int i=0; i < (int)fps*jnt_dur; i++)
+            {
+              double dt = (jnt_dur / (fps*jnt_dur - 1)) * i;
+              for(int j=0; j < robot->getDOF(); j++)
+              {
+                vec_jnt[j].push_back(traj_jnt[j].getPosition(dt));
+              }
+            }
+          } ImGui::SameLine();
+          HelpMarker("Press 'Move_Joints' will use above joint values as end point and \n"
+                     "use theta (in D-H Table) as start point to do FK with trajectory planning");
+          ImGui::InputFloat("Duration##jnt_dur", &jnt_dur);
+
+          if (disable_in_move || !isInitial)
+            ImGui::EndDisabled();
+
+          ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("CartIK"))
+        {
+          ImGui::Text("Do IK Continuely");
+          ImGui::InputFloat("X", &cart_end[0]);
+          ImGui::InputFloat("Y", &cart_end[1]);
+          ImGui::InputFloat("Z", &cart_end[2]);
+          ImGui::InputFloat("A", &cart_end[3]);
+          ImGui::InputFloat("B", &cart_end[4]);
+          ImGui::InputFloat("C", &cart_end[5]);
+
+
+          if (disable_in_move || !isInitial)
+            ImGui::BeginDisabled();
+
+          if (ImGui::Button("Move_TCP"))
+          {
+            // get tcp position & orientation from ui
+            std::vector<rb::math::Polynomial> traj_cart(robot->getDOF());
+            rb::math::VectorX cart_start(robot->getDOF());
+            cart_start << cart_inp[0], cart_inp[1], cart_inp[2],
+                          coor_inp[2], coor_inp[1], coor_inp[0];
+
+            for (int i=0; i < robot->getDOF(); i++)
+            {
+              traj_cart[i] = rb::math::Polynomial(5);
+              std::vector<double> trj_start = {cart_start[i], 0., 0.};
+              std::vector<double> trj_end = {cart_end[i], 0., 0.};
+              traj_cart[i].coeffQuintic(trj_start, trj_end, tcp_dur);
+              vec_cart[i].empty();   // clear prevoius data point
+            }
+            for (int i=0; i < (int)fps*tcp_dur; i++)
+            {
+              double dt = (tcp_dur / (fps*tcp_dur - 1)) * i;
+              for(int j=0; j < robot->getDOF(); j++)
+              {
+                vec_cart[j].push_back(traj_cart[j].getPosition(dt));
+              }
+            }
+          } ImGui::SameLine();
+          HelpMarker("Press 'Move_TCP' will use above cartesian/pose values as end point and "
+                     "use TCP value (next to D-H Table) as start point to do IK with trajectory planning."
+                     "It will update theta values if IK find solution.");
+          ImGui::InputFloat("Duration##tcp_dur", &tcp_dur);
+
+          if (disable_in_move || !isInitial)
+            ImGui::EndDisabled();
+
+          ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+      }
+      ImGui::PopItemWidth();
+      ImGui::NextColumn();
+      //ImGui::SetColumnWidth(1, -1);
+
+      ImGui::PushItemWidth(700.0);
+      static ScrollingBuffer sb_j1, sb_j2, sb_j3, sb_j4, sb_j5, sb_j6;
+      static float t = 0;
+      static bool isPause = false;
+      static float history = 10.0f;
+
+      if (!isPause)
+      {
+        t += ImGui::GetIO().DeltaTime;
+        rb::math::VectorX th_now = robot->getTheta();
+        sb_j1.AddPoint(t, th_now[0]);
+        sb_j2.AddPoint(t, th_now[1]);
+        sb_j3.AddPoint(t, th_now[2]);
+        sb_j4.AddPoint(t, th_now[3]);
+        sb_j5.AddPoint(t, th_now[4]);
+        sb_j6.AddPoint(t, th_now[5]);
+      }
+
+      ImGui::Checkbox("Pause", &isPause);
+      ImGui::SameLine();  ImGui::SetNextItemWidth(450.0f);
+      ImGui::SliderFloat("History", &history, 1, 30, "%.1f s");
+
+      static ImPlotAxisFlags flags = ImPlotAxisFlags_None;
+      if (ImPlot::BeginPlot("Joint 1,2,3", ImVec2(-1,180)))
+      {
+        ImPlot::SetupAxes("Time (s)", "Degree", ImPlotAxisFlags_NoLabel, flags);
+        ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, -180, 180);
+        ImPlot::PlotLine("Joint 1", &sb_j1.Data[0].x, &sb_j1.Data[0].y, sb_j1.Data.size(), 0, sb_j1.Offset, 2*sizeof(float));
+        ImPlot::PlotLine("Joint 2", &sb_j2.Data[0].x, &sb_j2.Data[0].y, sb_j2.Data.size(), 0, sb_j2.Offset, 2*sizeof(float));
+        ImPlot::PlotLine("Joint 3", &sb_j3.Data[0].x, &sb_j3.Data[0].y, sb_j3.Data.size(), 0, sb_j3.Offset, 2*sizeof(float));
+        ImPlot::EndPlot();
+      }
+      if (ImPlot::BeginPlot("Joint 4,5,6", ImVec2(-1,180)))
+      {
+        ImPlot::SetupAxes("Time (s)", "Degree", flags, flags);
+        ImPlot::SetupAxisLimits(ImAxis_X1,t - history, t, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, -180, 180);
+        ImPlot::PlotLine("Joint 4", &sb_j4.Data[0].x, &sb_j4.Data[0].y, sb_j4.Data.size(), 0, sb_j4.Offset, 2*sizeof(float));
+        ImPlot::PlotLine("Joint 5", &sb_j5.Data[0].x, &sb_j5.Data[0].y, sb_j5.Data.size(), 0, sb_j5.Offset, 2*sizeof(float));
+        ImPlot::PlotLine("Joint 6", &sb_j6.Data[0].x, &sb_j6.Data[0].y, sb_j6.Data.size(), 0, sb_j6.Offset, 2*sizeof(float));
+        ImPlot::EndPlot();
+      }
+
+      ImGui::PopItemWidth();
+      ImGui::Columns(1);
+
+      // check if need to do FK
+      if (!vec_jnt[0].empty()) // check if all vec_jnt have the same size
+      {
+        disable_in_move = true;   // disable all related buttons while moving robot
+        rb::math::VectorX th(6);
+        th << vec_jnt[0].front(), vec_jnt[1].front(), vec_jnt[2].front(),
+              vec_jnt[3].front(), vec_jnt[4].front(), vec_jnt[5].front();
+        for (int i=0; i < robot->getDOF(); i++)
+        {
+          //th << vec_jnt[i].front();
+          vec_jnt[i].erase(vec_jnt[i].begin());
+        }
+
+        // Compute FK and update theta (default)
+        pose_tcp = robot->forwardKin(th);
+
+        // output to ui (theta/joint and TCP)
+        for (int i=0; i < robot->getDOF(); i++)
+        {
+          dh_table[i][3] = th[i];
+        }
+        cart_inp[0] = pose_tcp.x;
+        cart_inp[1] = pose_tcp.y;
+        cart_inp[2] = pose_tcp.z;
+        coor_inp[2] = pose_tcp.a;
+        coor_inp[1] = pose_tcp.b;
+        coor_inp[0] = pose_tcp.c;
+      }else if(!vec_cart[0].empty())  // check if need do IK
+      {
+        disable_in_move = true;   // disable all related buttons while moving robot
+        rb::math::VectorX pose(6);
+        pose << vec_cart[0].front(), vec_cart[1].front(), vec_cart[2].front(),
+                vec_cart[3].front(), vec_cart[4].front(), vec_cart[5].front();
+        for (int i=0; i < robot->getDOF(); i++)
+        {
+          vec_cart[i].erase(vec_cart[i].begin());
+        }
+
+        // Compute IK and update theta (default)
+        rb::math::VectorX q(robot->getDOF());
+        rb::kin::IK_RESULT check = robot->inverseKin(pose[0], pose[1], pose[2], pose[3], pose[4],
+                                                     pose[5], q, joint_value);
+
+        switch (check)
+        {
+        case rb::kin::IK_RESULT::IK_COMPLETE:
+          std::strncpy(ik_result_str, "Find Solutions.", sizeof(ik_result_str) - 1);
+          // Update joints value by FK with most fit solution.
+          robot->forwardKin(q);
+          for (int jn = 0; jn < 6; jn++)
+          {
+            dh_table[jn][3] = q[jn];
+          }
+          cart_inp[0] = pose[0];
+          cart_inp[1] = pose[1];
+          cart_inp[2] = pose[2];
+          coor_inp[2] = pose[3];
+          coor_inp[1] = pose[4];
+          coor_inp[0] = pose[5];
+          break;
+          // TODO: stop IK and clear vec_cart in the rest of cases.
+        case rb::kin::IK_RESULT::IK_NO_SOLUTION:
+          std::strncpy(ik_result_str, "No Solutions.", sizeof(ik_result_str) - 1);
+          break;
+        case rb::kin::IK_RESULT::IK_ANGLE_LIMIT:
+          std::strncpy(ik_result_str, "Joint Limit.", sizeof(ik_result_str) - 1);
+          break;
+        case rb::kin::IK_RESULT::IK_SINGULAR:
+          std::strncpy(ik_result_str, "Singular Point Reach!.", sizeof(ik_result_str) - 1);
+          break;
+        case rb::kin::IK_RESULT::IK_INPUT_INVALID:
+          std::strncpy(ik_result_str, "Input Invalid!.", sizeof(ik_result_str) - 1);
+          break;
+        }
+        ik_result_str[sizeof(ik_result_str) - 1] = '\0'; // Ensure null-termination
+
+        // show most fit solution.
+        sol_current_idx = joint_value.fit;
+
+        // output all solutions to ui.
+        for (int row = 0; row < 8; ++row)
+        {
+          for (int col = 0; col < 6; ++col)
+          {
+            sol_table[row][col] = joint_value.axis_value(row, col);
+          }
+        }
+      }
+      else
+      {
+        disable_in_move = false;  // enable all related buttons
+      }
 
       if (show_gizmo_window && g_drawlist)
       {
@@ -1102,7 +1420,6 @@ namespace MyApp
         { // draw joints
           g_drawlist->AddCircleFilled(worldToPos(i, res), 6, jnt_color);
         }
-        //g_drawlist->AddLine(ImVec2(150.5f, 200.5f), ImVec2(500.0f, 500.0f), line_color, 5.0f);
       }
 
       ImGui::End();   // Begin KinDemo

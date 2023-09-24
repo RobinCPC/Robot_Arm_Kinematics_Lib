@@ -317,6 +317,7 @@ ArmPose Artic::forwardKin(const rb::math::VectorX& q, const bool update)
     pre_theta_ = q;
     pre_fit_solution_ = 9;       // reset previous solution
 
+    this->theta = q;            // update current joint angles
     for(int i=0; i < this->getDOF(); ++i)
     {
       *(this->frames_[i]) = this->base_tf_ * trsf06[i];
