@@ -32,8 +32,7 @@
 build
 bin
 
-# 3rd party source
-demos/kinDemo_Im/imgui
+# webassmbly compiled files
 demos/kinDemo_Im/web
 
 # IDE project setting

@@ -1,0 +1,10 @@
+[submodule "demos/kinDemo_Im/imgui"]
+	path = demos/kinDemo_Im/imgui
+	url = git@github.com:ocornut/imgui.git
+	branch = docking
+[submodule "demos/kinDemo_Im/ImGuizmo"]
+	path = demos/kinDemo_Im/ImGuizmo
+	url = git@github.com:CedricGuillemet/ImGuizmo.git
+[submodule "demos/kinDemo_Im/implot"]
+	path = demos/kinDemo_Im/implot
+	url = git@github.com:epezent/implot.git
