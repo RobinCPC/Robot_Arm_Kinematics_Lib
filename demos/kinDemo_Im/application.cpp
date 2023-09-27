@@ -931,6 +931,16 @@ namespace MyApp
           dh_table[jn][4] = up0[jn];
           dh_table[jn][5] = low0[jn];
         }
+        // TODO update TCP UI value
+        pose_tcp = robot->getArmPose();
+        // output to ui
+        cart_inp[0] = pose_tcp.x;
+        cart_inp[1] = pose_tcp.y;
+        cart_inp[2] = pose_tcp.z;
+        coor_inp[0] = pose_tcp.c;
+        coor_inp[1] = pose_tcp.b;
+        coor_inp[2] = pose_tcp.a;
+
         isInitial = true;
       } ImGui::SameLine();
 
@@ -970,6 +980,15 @@ namespace MyApp
 
         robot = std::unique_ptr<rb::kin::Artic>{new rb::kin::Artic(a0, alpha0, d0,
                                                                    th0, up0, low0)};
+        // TODO: update UI TCP values
+        pose_tcp = robot->getArmPose();
+        // output to ui
+        cart_inp[0] = pose_tcp.x;
+        cart_inp[1] = pose_tcp.y;
+        cart_inp[2] = pose_tcp.z;
+        coor_inp[0] = pose_tcp.c;
+        coor_inp[1] = pose_tcp.b;
+        coor_inp[2] = pose_tcp.a;
       }
 
       HelpMarker("Press \'Forward_Kin\' will use joint angles (\'theta\' in D-H Table) to do FK once.\n"
@@ -1141,8 +1160,8 @@ namespace MyApp
       }
       //ImGui::Separator();
 
-      static std::vector<float> jnt_end(6,0);
-      static std::vector<float> cart_end(6,0);
+      static std::vector<float> jnt_end {90., -45., 0., 0., 45., -90.};
+      static std::vector<float> cart_end {300., 50., 450., 0., 0., 180};
       static std::vector<std::vector<double>> vec_jnt(6, std::vector<double>());
       static std::vector<std::vector<double>> vec_cart(6, std::vector<double>());
       static float jnt_dur = 2.0f;

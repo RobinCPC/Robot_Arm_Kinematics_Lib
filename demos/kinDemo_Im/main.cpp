@@ -172,7 +172,7 @@ int main(int, char**)
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::SetNextWindowPos(ImVec2(700, 500), ImGuiCond_Once);
+            ImGui::SetNextWindowPos(ImVec2(50, 300), ImGuiCond_FirstUseEver);
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)

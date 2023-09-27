@@ -35,7 +35,7 @@ Artic::Artic()
   this->links_.push_back(new rb::kin::Link( 75.0,  90.,    0., -90.,  45., -190));  // link1
   this->links_.push_back(new rb::kin::Link(270.0,   0.,    0.,   0.,  79., -209));  // link2
   this->links_.push_back(new rb::kin::Link( 90.0,  90., -295.,   0., 190., -190));  // link3
-  this->links_.push_back(new rb::kin::Link(  0.0, -90.,    0.,   0., 120., -120));  // link4
+  this->links_.push_back(new rb::kin::Link(  0.0, -90.,    0.,  90., 120., -120));  // link4
   this->links_.push_back(new rb::kin::Link(  0.0, -90.,   80.,   0., 350., -350));  // link5
   this->setDOF();
 
@@ -45,11 +45,12 @@ Artic::Artic()
   theta.resize(this->getDOF());
   up_lim_.resize(this->getDOF());
   low_lim_.resize(this->getDOF());
+  // TODO: copy dh parameters from links to artic
   //      <<     j1,    j2,          j3,     j4,    j5,  j6
         a <<    0.0,  75.0,       270.0,   90.0,   0.0,   0.0;
     alpha <<  180.0,  90.0,         0.0,   90.0, -90.0, -90.0;
         d << -335.0,   0.0,         0.0, -295.0,   0.0,  80.0;
-    theta <<    0.0, -90.0,         0.0,    0.0,   0.0,   0.0;
+    theta <<    0.0, -90.0,         0.0,    0.0,  90.0,   0.0;
 
    up_lim_ <<  170.,   45.,  169.0-90.0,   190.,  120.,  350.; /* degree */
   low_lim_ << -170., -190., -119.0-90.0,  -190., -120., -350.; /* degree */
