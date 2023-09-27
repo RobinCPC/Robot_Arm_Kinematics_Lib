@@ -5,6 +5,10 @@ A kinematic Library for 6-axis Articulated Robot Arm
 [Doxygen API Documentation](https://robincpc.github.io/Robot_Arm_Kinematics_Lib/)
 
 Note: still WIP :construction:
+
+Here is the online version ([link](https://robincpc.github.io/demo/)) of Demo GUI
+![kinDemo_Im](./docs/images/kinDemo_Im.png)
+
 ## Basic Build Instructions
 1. Clone this repo.
 2. Make a build directory: `mkdir build && cd build`
