@@ -3,6 +3,8 @@
 #include "kin/artic.h"
 #include <memory>
 
+#define KINDEMO_VERSION   "1.0.1"
+
 namespace MyApp
 {
   void RenderUI();

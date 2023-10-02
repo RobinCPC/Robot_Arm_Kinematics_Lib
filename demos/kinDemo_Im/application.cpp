@@ -1238,14 +1238,27 @@ namespace MyApp
             // get tcp position & orientation from ui
             std::vector<rb::math::Polynomial> traj_cart(robot->getDOF());
             rb::math::VectorX cart_start(robot->getDOF());
+            rb::math::VectorX cart_endCP(robot->getDOF());
             cart_start << cart_inp[0], cart_inp[1], cart_inp[2],
                           coor_inp[2], coor_inp[1], coor_inp[0];
+            cart_endCP << cart_end[0], cart_end[1], cart_end[2],
+                          cart_end[3], cart_end[4], cart_end[5];
 
+            // check orientation to go shorter path.  TODO: add this function to trajectory class.
+            for (int i = 3; i < 6; ++i)
+            {
+              float temp_bg = cart_endCP[i] + 360.0;
+              float temp_sm = cart_endCP[i] - 360.0;
+              if ( std::fabs(temp_bg - cart_start[i]) < std::fabs(cart_endCP[i] - cart_start[i]))
+                cart_endCP[i] = temp_bg;
+              if ( std::fabs(temp_sm - cart_start[i]) < std::fabs(cart_endCP[i] - cart_start[i]))
+                cart_endCP[i] = temp_sm;
+            }
             for (int i=0; i < robot->getDOF(); i++)
             {
               traj_cart[i] = rb::math::Polynomial(5);
               std::vector<double> trj_start = {cart_start[i], 0., 0.};
-              std::vector<double> trj_end = {cart_end[i], 0., 0.};
+              std::vector<double> trj_end = {cart_endCP[i], 0., 0.};
               traj_cart[i].coeffQuintic(trj_start, trj_end, tcp_dur);
               vec_cart[i].empty();   // clear prevoius data point
             }
@@ -1369,17 +1382,17 @@ namespace MyApp
         case rb::kin::IK_RESULT::IK_COMPLETE:
           std::strncpy(ik_result_str, "Find Solutions.", sizeof(ik_result_str) - 1);
           // Update joints value by FK with most fit solution.
-          robot->forwardKin(q);
+          pose_tcp = robot->forwardKin(q);
           for (int jn = 0; jn < 6; jn++)
           {
             dh_table[jn][3] = q[jn];
           }
-          cart_inp[0] = pose[0];
-          cart_inp[1] = pose[1];
-          cart_inp[2] = pose[2];
-          coor_inp[2] = pose[3];
-          coor_inp[1] = pose[4];
-          coor_inp[0] = pose[5];
+          cart_inp[0] = pose_tcp.x;
+          cart_inp[1] = pose_tcp.y;
+          cart_inp[2] = pose_tcp.z;
+          coor_inp[2] = pose_tcp.a;
+          coor_inp[1] = pose_tcp.b;
+          coor_inp[0] = pose_tcp.c;
           break;
           // TODO: stop IK and clear vec_cart in the rest of cases.
         case rb::kin::IK_RESULT::IK_NO_SOLUTION:

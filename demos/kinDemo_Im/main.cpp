@@ -64,7 +64,12 @@ int main(int, char**)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "KinDemo built with Dear ImGui", nullptr, nullptr);
+    char title_buf[50];
+    strcpy(title_buf, "KinDemo ");
+    strcat(title_buf, KINDEMO_VERSION);
+    strcat(title_buf, " built with Dear ImGui");
+    //const std::string title_str = "KinDemo " + std::string(KINDEMO_VERSION) + " built with Dear ImGui";   // use c_str to char*
+    GLFWwindow* window = glfwCreateWindow(1280, 720, title_buf, nullptr, nullptr);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
