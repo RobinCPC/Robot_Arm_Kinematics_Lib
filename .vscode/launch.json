@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C++ Launch (lldb) kinDemo_Im",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/demos/kinDemo_Im/kinDemo_Im",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for lldb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            //"preLaunchTask": "build kinDemo_Im",
+            "miDebuggerPath": "/usr/bin/lldb"
+        },
+        {
+            "name": "C++ Launch (lldb) test_run",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/test_run",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for lldb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            //"preLaunchTask": "build test_run",
+            "miDebuggerPath": "/usr/bin/lldb"
+        }
+    ]
+}

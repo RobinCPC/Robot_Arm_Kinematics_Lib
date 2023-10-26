@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "algorithm": "cpp",
+        "random": "cpp",
+        "iosfwd": "cpp"
+    },
+    "makefile.makeDirectory": "${workspaceFolder}/demos/kinDemo_Im/",
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "${workspaceFolder}/demos/kinDemo_Im",
+            "binaryPath": "${workspaceFolder}/demos/kinDemo_Im/kinDemo_Im",
+            "binaryArgs": []
+        }
+    ],
+    "C_Cpp.errorSquiggles": "disabled"
+}
