@@ -183,6 +183,12 @@ public:
    */
   rb::kin::ArmPose getJointPos(const int& jnt);
 
+  /*!
+   * @brief Get the HT matrix of the certain robot joint.
+   * @return  rb::math::Matrix4
+   */
+  rb::math::Matrix4 getJointFrame(const int& jnt);
+
 protected:
   /*! Link length data member of modified D-H parameter for robot arm */
   rb::math::VectorX a;                          //!< Link length (mm)

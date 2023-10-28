@@ -1199,7 +1199,7 @@ namespace MyApp
               std::vector<double> trj_start = {jnt_start[i], 0., 0.};
               std::vector<double> trj_end = {jnt_end[i], 0., 0.};
               traj_jnt[i].coeffQuintic(trj_start, trj_end, jnt_dur);
-              vec_jnt[i].empty();   // clear prevoius data point
+              vec_jnt[i].clear();   // clear prevoius data point
             }
             for (int i=0; i < (int)fps*jnt_dur; i++)
             {
@@ -1260,7 +1260,7 @@ namespace MyApp
               std::vector<double> trj_start = {cart_start[i], 0., 0.};
               std::vector<double> trj_end = {cart_endCP[i], 0., 0.};
               traj_cart[i].coeffQuintic(trj_start, trj_end, tcp_dur);
-              vec_cart[i].empty();   // clear prevoius data point
+              vec_cart[i].clear();   // clear prevoius data point
             }
             for (int i=0; i < (int)fps*tcp_dur; i++)
             {
@@ -1335,6 +1335,9 @@ namespace MyApp
       ImGui::Columns(1);
 
       // check if need to do FK
+      static int tcp_traj_num_max = (int)history * 60;
+      static float scale_3d = 250.f;
+      static std::vector<vec_t> vec_tcp_traj;
       if (!vec_jnt[0].empty()) // check if all vec_jnt have the same size
       {
         disable_in_move = true;   // disable all related buttons while moving robot
@@ -1350,7 +1353,10 @@ namespace MyApp
         // Compute FK and update theta (default)
         pose_tcp = robot->forwardKin(th);
 
-        // output to ui (theta/joint and TCP)
+        // Output to ui (theta/joint and TCP) and record TCP to draw trajecotry later
+        if (vec_tcp_traj.size() >= tcp_traj_num_max)
+          vec_tcp_traj.erase(vec_tcp_traj.begin());
+        vec_tcp_traj.push_back(makeVect(pose_tcp.y / scale_3d, pose_tcp.z / scale_3d, pose_tcp.x / scale_3d));
         for (int i=0; i < robot->getDOF(); i++)
         {
           dh_table[i][3] = th[i];
@@ -1383,6 +1389,9 @@ namespace MyApp
           std::strncpy(ik_result_str, "Find Solutions.", sizeof(ik_result_str) - 1);
           // Update joints value by FK with most fit solution.
           pose_tcp = robot->forwardKin(q);
+          if (vec_tcp_traj.size() >= tcp_traj_num_max)
+            vec_tcp_traj.erase(vec_tcp_traj.begin());
+          vec_tcp_traj.push_back(makeVect(pose_tcp.y / scale_3d, pose_tcp.z / scale_3d, pose_tcp.x / scale_3d));
           for (int jn = 0; jn < 6; jn++)
           {
             dh_table[jn][3] = q[jn];
@@ -1427,11 +1436,15 @@ namespace MyApp
         disable_in_move = false;  // enable all related buttons
       }
 
+      // Draw robot links & joints with ImGuizmo
       if (show_gizmo_window && g_drawlist)
       {
-        // try to draw Links with ImGuizmo
         ImU32 link_color = ImGui::GetColorU32(ImVec4(1.0f, 0.5f, 0.0f, 1.0f));
-        ImU32 jnt_color = ImGui::GetColorU32(ImVec4(0.3f, 0.16, 0.8f, 1.0f));
+        ImU32 jnt_color = ImGui::GetColorU32(ImVec4(0.3f, 0.16f, 0.8f, 1.0f));
+        ImU32 traj_color = ImGui::GetColorU32(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+        ImU32 x_color = ImGui::GetColorU32(ImVec4(0.666f, 0.000f, 0.000f, 1.000f));
+        ImU32 y_color = ImGui::GetColorU32(ImVec4(0.000f, 0.666f, 0.000f, 1.000f));
+        ImU32 z_color = ImGui::GetColorU32(ImVec4(0.000f, 0.000f, 0.666f, 1.000f));
         matrix_t viewProjection = *(matrix_t *)cameraView * *(matrix_t *)cameraProjection;
         vec_t frustum[6];
         ComputeFrustumPlanes(frustum, viewProjection.m16);
@@ -1444,13 +1457,44 @@ namespace MyApp
         for (int i = 0; i < robot->getDOF(); ++i)
         {
           jnt_pos[i] = robot->getJointPos(i);
-          jnt_xyz[i+1] = makeVect(jnt_pos[i].y / 250.f, jnt_pos[i].z / 250.f, jnt_pos[i].x / 250.f);
-          // draw links
+          jnt_xyz[i+1] = makeVect(jnt_pos[i].y / scale_3d, jnt_pos[i].z / scale_3d, jnt_pos[i].x / scale_3d);
+          // Draw links
           g_drawlist->AddLine(worldToPos(jnt_xyz[i], res), worldToPos(jnt_xyz[i+1], res), link_color, 8.0f);
         }
+        // Draw joints
         for (auto& i : jnt_xyz)
-        { // draw joints
+        {
           g_drawlist->AddCircleFilled(worldToPos(i, res), 6, jnt_color);
+        }
+        // Draw tcp trajectory
+        for (auto& i : vec_tcp_traj)
+        {
+          g_drawlist->AddCircleFilled(worldToPos(i, res), 1, traj_color);
+        }
+        //if (!disable_in_move && !vec_tcp_traj.empty())
+        //  vec_tcp_traj.erase(vec_tcp_traj.begin());
+
+        // Draw coordinate bar of each joints
+        for (int i=0; i < robot->getDOF(); ++i)
+        {
+          rb::math::Matrix4 jnt_frame = robot->getJointFrame(i);
+          float arr_len = 60.0;
+          std::vector<vec_t> coor_bar =
+              {
+                  makeVect(jnt_frame(1, 3) / scale_3d, jnt_frame(2, 3) / scale_3d, jnt_frame(0, 3) / scale_3d), // joint center
+                  makeVect((arr_len * jnt_frame(1, 0) + jnt_frame(1, 3)) / scale_3d,
+                           (arr_len * jnt_frame(2, 0) + jnt_frame(2, 3)) / scale_3d,
+                           (arr_len * jnt_frame(0, 0) + jnt_frame(0, 3)) / scale_3d), // joint X direction
+                  makeVect((arr_len * jnt_frame(1, 1) + jnt_frame(1, 3)) / scale_3d,
+                           (arr_len * jnt_frame(2, 1) + jnt_frame(2, 3)) / scale_3d,
+                           (arr_len * jnt_frame(0, 1) + jnt_frame(0, 3)) / scale_3d), // joint Y direction
+                  makeVect((arr_len * jnt_frame(1, 2) + jnt_frame(1, 3)) / scale_3d,
+                           (arr_len * jnt_frame(2, 2) + jnt_frame(2, 3)) / scale_3d,
+                           (arr_len * jnt_frame(0, 2) + jnt_frame(0, 3)) / scale_3d) // joint Z direction
+              };
+          g_drawlist->AddLine(worldToPos(coor_bar[0], res), worldToPos(coor_bar[1], res), x_color, 2.0f);
+          g_drawlist->AddLine(worldToPos(coor_bar[0], res), worldToPos(coor_bar[2], res), y_color, 2.0f);
+          g_drawlist->AddLine(worldToPos(coor_bar[0], res), worldToPos(coor_bar[3], res), z_color, 2.0f);
         }
       }
 

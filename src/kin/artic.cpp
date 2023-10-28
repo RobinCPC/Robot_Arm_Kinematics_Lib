@@ -858,7 +858,7 @@ rb::math::VectorX Artic::getLowLimit(void) const
 }
 
  rb::kin::ArmPose Artic::getJointPos(const int& jnt)
- {
+ { // TODO: check if 0 < jnt < DOF
   ArmPose jntPos;
   /* calculate xyzabc */
   jntPos.x = (*(this->frames_[jnt]))(0, 3);
@@ -870,6 +870,11 @@ rb::math::VectorX Artic::getLowLimit(void) const
   jntPos.c = RAD2DEG * jntPos.c;
   return jntPos;
  }
+
+  rb::math::Matrix4 Artic::getJointFrame(const int& jnt)
+  { // TODO: check if 0 < jnt < DOF
+    return *(this->frames_[jnt]);
+  }
 
 /********************************************************************************/
 /** \brief Rotation Matrix to Roll Pitch Yaw

@@ -3,7 +3,7 @@
 #include "kin/artic.h"
 #include <memory>
 
-#define KINDEMO_VERSION   "1.0.1"
+#define KINDEMO_VERSION   "1.0.2"
 
 namespace MyApp
 {
