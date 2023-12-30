@@ -106,9 +106,9 @@ int main(void)
   traj.coeffQuintic(start, end, T);
   std::cout << "coefficient: \n" << traj.getCoeff();
 
-  int step = 11;
+  int step = 120;
   std::vector<double> z_t(step);
-  rb::math::MatrixX sols(11,6);
+  rb::math::MatrixX sols(step, 6);
   std::cout << "\nFor solving Inverse Kinematics of 6-axis robot arm "<< step << " times: \n";
   {
     Timer timer;
