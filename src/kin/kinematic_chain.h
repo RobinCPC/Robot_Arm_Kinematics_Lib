@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <memory>
 
 #include "link.h"
 
@@ -110,7 +111,7 @@ public:
 
   /*! Constructor with a Links vector and other parameter*/
   KinematicChain(
-      std::vector<rb::kin::Link*>& links,
+      std::vector<std::unique_ptr<rb::kin::Link>>& links,
       rb::math::Matrix4  base=rb::math::Matrix4::Identity(),
       rb::math::Matrix4  tool=rb::math::Matrix4::Identity(),
       rb::math::Vector3  gravity=rb::math::Vector3(0., 0., rb::math::GRAVITY),
@@ -201,12 +202,10 @@ public:
 
 protected:
   /*! A vector of Link class. */
-  std::vector<rb::kin::Link*> links_;
-  //std::vector<rb::kin::Link*, Eigen::aligned_allocator<rb::kin::Link*> > links_;
+  std::vector<std::unique_ptr<rb::kin::Link>> links_;
 
   /*!< A vector of HT matrix to the pose of each joint and TCP. */
-  std::vector<rb::math::Matrix4*> frames_;
-  //std::vector<rb::math::Matrix4*, Eigen::aligned_allocator<rb::math::Matrix4*> > frames_;
+  std::vector<rb::math::Matrix4> frames_;
 
   int dof_;                                   //!< A integer indicates the degree of freedom
   rb::math::Matrix4 base_tf_;                 //!< HT matrix of robot base with respected to world coordination

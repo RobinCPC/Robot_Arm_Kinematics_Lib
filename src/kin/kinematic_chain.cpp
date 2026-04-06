@@ -57,13 +57,17 @@ std::ostream& operator<< (std::ostream& ost, const ArmPose& pose)
 KinematicChain::KinematicChain(){}
 
 KinematicChain::KinematicChain(
-    std::vector<rb::kin::Link*>& links,
+    std::vector<std::unique_ptr<rb::kin::Link>>& links,
     rb::math::Matrix4  base, rb::math::Matrix4  tool, rb::math::Vector3  gravity,
     std::string manufactor, std::string model
     )
 {
-  // Initialize the properties of Kinematic Chain
-  this->links_ = links;
+  // Initialize the properties of Kinematic Chain (take ownership)
+  this->links_.resize(links.size());
+  for (size_t i = 0; i < links.size(); ++i)
+  {
+    this->links_[i] = std::move(links[i]);
+  }
   this->setDOF();
 
   this->tool_tf_ = tool;
@@ -80,12 +84,11 @@ KinematicChain::KinematicChain(
 
   /* Initialize frames and copy HTmatrix of all joints and tcp */
   this->frames_.resize(this->getDOF()+1);
-  //this->frames_ = std::vector<rb::math::Matrix4*, Eigen::aligned_allocator<rb::math::Matrix4*> >(7);
   for(int i=0; i < this->getDOF(); ++i)
   {
-    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+    this->frames_[i] = this->base_tf_ * trsf06[i];
   }
-  this->frames_.back() = new Matrix4(this->world_tcp_tf_);
+  this->frames_.back() = this->world_tcp_tf_;
 
   // Initialze additional properties
   this->gravity_ = gravity;
@@ -122,9 +125,9 @@ ArmPose KinematicChain::forwardKin(const rb::math::VectorX& q, const bool update
   {
     for(int i=0; i < this->getDOF(); ++i)
     {
-      *(this->frames_[i]) = this->base_tf_ * trsf06[i];
+      this->frames_[i] = this->base_tf_ * trsf06[i];
     }
-    *(this->frames_.back()) = world_tcp_tf_;
+    this->frames_.back() = world_tcp_tf_;
   }
 
   return tcp_pose;

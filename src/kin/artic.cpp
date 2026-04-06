@@ -30,13 +30,13 @@ using rb::math::AngleAxis;
 Artic::Artic()
 {
   // Default as KUKA KR5 ( Using Modified DH-Table)
-  //                    Modified DH-Table:     a, alpha,    d, theta,  up, down
-  this->links_.push_back(new rb::kin::Link(  0.0, 180., -335.,   0., 170., -170));  // link0
-  this->links_.push_back(new rb::kin::Link( 75.0,  90.,    0., -90.,  45., -190));  // link1
-  this->links_.push_back(new rb::kin::Link(270.0,   0.,    0.,   0.,  79., -209));  // link2
-  this->links_.push_back(new rb::kin::Link( 90.0,  90., -295.,   0., 190., -190));  // link3
-  this->links_.push_back(new rb::kin::Link(  0.0, -90.,    0.,  90., 120., -120));  // link4
-  this->links_.push_back(new rb::kin::Link(  0.0, -90.,   80.,   0., 350., -350));  // link5
+  //                    Modified DH-Table:          a, alpha,    d, theta,  up, down
+  this->links_.push_back(std::unique_ptr<Link>(new Link(  0.0, 180., -335.,   0., 170., -170)));  // link0
+  this->links_.push_back(std::unique_ptr<Link>(new Link( 75.0,  90.,    0., -90.,  45., -190)));  // link1
+  this->links_.push_back(std::unique_ptr<Link>(new Link(270.0,   0.,    0.,   0.,  79., -209)));  // link2
+  this->links_.push_back(std::unique_ptr<Link>(new Link( 90.0,  90., -295.,   0., 190., -190)));  // link3
+  this->links_.push_back(std::unique_ptr<Link>(new Link(  0.0, -90.,    0.,  90., 120., -120)));  // link4
+  this->links_.push_back(std::unique_ptr<Link>(new Link(  0.0, -90.,   80.,   0., 350., -350)));  // link5
   this->setDOF();
 
   a.resize(this->getDOF());
@@ -100,12 +100,11 @@ Artic::Artic()
 
   /* Initialize frames and copy HTmatrix of all joints and tcp */
   this->frames_.resize(this->getDOF()+1);
-  //this->frames_ = std::vector<rb::math::Matrix4*, Eigen::aligned_allocator<rb::math::Matrix4*> >(7);
   for(int i=0; i < this->getDOF(); ++i)
   {
-    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+    this->frames_[i] = this->base_tf_ * trsf06[i];
   }
-  this->frames_.back() = new Matrix4(world_tcp_tf_);
+  this->frames_.back() = world_tcp_tf_;
 }
 
 Artic::Artic(
@@ -140,8 +139,8 @@ Artic::Artic(
   /*initialize Modified DH-Table*/
   for (int i=0; i < a0.size(); ++i)
   {
-    this->links_.push_back(new Link(a0[i], alpha0[i], d0[i], ini_theta[i],
-                                    uplimit0[i], lowlimit0[i]));
+    this->links_.push_back(std::unique_ptr<Link>(new Link(a0[i], alpha0[i], d0[i], ini_theta[i],
+                                    uplimit0[i], lowlimit0[i])));
   }
   this->setDOF();
 
@@ -197,13 +196,13 @@ Artic::Artic(
   this->frames_.resize(this->getDOF()+1);
   for(int i=0; i < this->getDOF(); ++i)
   {
-    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+    this->frames_[i] = this->base_tf_ * trsf06[i];
   }
-  this->frames_.back() = new Matrix4(world_tcp_tf_);
+  this->frames_.back() = world_tcp_tf_;
 }
 
 Artic::Artic(
-      std::vector<rb::kin::Link*>& links,
+      std::vector<std::unique_ptr<rb::kin::Link>>& links,
       rb::math::Matrix4  base, rb::math::Matrix4  tool, rb::math::Vector3  gravity,
       std::string manufactor, std::string model
     )
@@ -214,8 +213,13 @@ Artic::Artic(
     return;
   }
 
-  /*initialize Modified DH-Table*/
-  this->links_ = links;
+  /*initialize Modified DH-Table (take ownership of links)*/
+  int nlinks = links.size();
+  this->links_.resize(nlinks);
+  for (int i = 0; i < nlinks; ++i)
+  {
+    this->links_[i] = std::move(links[i]);
+  }
   this->setDOF();
 
   this->a.resize(this->getDOF());
@@ -225,14 +229,14 @@ Artic::Artic(
   this->up_lim_.resize(this->getDOF());
   this->low_lim_.resize(this->getDOF());
 
-  for(int i=0; i < links.size(); ++i)
+  for(int i=0; i < nlinks; ++i)
   {
-    this->a[i] = links[i]->a;
-    this->alpha[i] = links[i]->alpha;
-    this->d[i] = links[i]->d;
-    this->theta[i] = links[i]->theta;
-    this->up_lim_[i] = links[i]->up_lim;
-    this->low_lim_[i] = links[i]->low_lim;
+    this->a[i] = this->links_[i]->a;
+    this->alpha[i] = this->links_[i]->alpha;
+    this->d[i] = this->links_[i]->d;
+    this->theta[i] = this->links_[i]->theta;
+    this->up_lim_[i] = this->links_[i]->up_lim;
+    this->low_lim_[i] = this->links_[i]->low_lim;
   }
 
   /* Initialize the rest variable */
@@ -280,9 +284,9 @@ Artic::Artic(
   this->frames_.resize(this->getDOF()+1);
   for(int i=0; i < this->getDOF(); ++i)
   {
-    this->frames_[i] = new Matrix4(this->base_tf_ * trsf06[i]);
+    this->frames_[i] = this->base_tf_ * trsf06[i];
   }
-  this->frames_.back() = new Matrix4(world_tcp_tf_);
+  this->frames_.back() = world_tcp_tf_;
 }
 
 /* Destructor */
@@ -321,9 +325,9 @@ ArmPose Artic::forwardKin(const rb::math::VectorX& q, const bool update)
     this->theta = q;            // update current joint angles
     for(int i=0; i < this->getDOF(); ++i)
     {
-      *(this->frames_[i]) = this->base_tf_ * trsf06[i];
+      this->frames_[i] = this->base_tf_ * trsf06[i];
     }
-    *(this->frames_.back()) = world_tcp_tf_;
+    this->frames_.back() = world_tcp_tf_;
   }
 
   return tcp_pose_;
@@ -861,10 +865,10 @@ rb::math::VectorX Artic::getLowLimit(void) const
  { // TODO: check if 0 < jnt < DOF
   ArmPose jntPos;
   /* calculate xyzabc */
-  jntPos.x = (*(this->frames_[jnt]))(0, 3);
-  jntPos.y = (*(this->frames_[jnt]))(1, 3);
-  jntPos.z = (*(this->frames_[jnt]))(2, 3);
-  tr2rpy(*(this->frames_[jnt]), jntPos.a, jntPos.b, jntPos.c);
+  jntPos.x = this->frames_[jnt](0, 3);
+  jntPos.y = this->frames_[jnt](1, 3);
+  jntPos.z = this->frames_[jnt](2, 3);
+  tr2rpy(this->frames_[jnt], jntPos.a, jntPos.b, jntPos.c);
   jntPos.a = RAD2DEG * jntPos.a;
   jntPos.b = RAD2DEG * jntPos.b;
   jntPos.c = RAD2DEG * jntPos.c;
@@ -873,7 +877,7 @@ rb::math::VectorX Artic::getLowLimit(void) const
 
   rb::math::Matrix4 Artic::getJointFrame(const int& jnt)
   { // TODO: check if 0 < jnt < DOF
-    return *(this->frames_[jnt]);
+    return this->frames_[jnt];
   }
 
 /********************************************************************************/
