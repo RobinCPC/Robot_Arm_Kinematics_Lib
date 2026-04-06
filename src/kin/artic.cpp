@@ -93,7 +93,7 @@ Artic::Artic()
   tcp_pose_.x = world_tcp_tf_(0,3);
   tcp_pose_.y = world_tcp_tf_(1,3);
   tcp_pose_.z = world_tcp_tf_(2,3);
-  tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
+  rb::math::tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
   tcp_pose_.a *= RAD2DEG;                     // change radian to degree
   tcp_pose_.b *= RAD2DEG;
   tcp_pose_.c *= RAD2DEG;
@@ -187,7 +187,7 @@ Artic::Artic(
   tcp_pose_.x = world_tcp_tf_(0,3);
   tcp_pose_.y = world_tcp_tf_(1,3);
   tcp_pose_.z = world_tcp_tf_(2,3);
-  tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
+  rb::math::tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
   tcp_pose_.a *= RAD2DEG;                   // change radian to degree
   tcp_pose_.b *= RAD2DEG;
   tcp_pose_.c *= RAD2DEG;
@@ -275,7 +275,7 @@ Artic::Artic(
   tcp_pose_.x = world_tcp_tf_(0,3);
   tcp_pose_.y = world_tcp_tf_(1,3);
   tcp_pose_.z = world_tcp_tf_(2,3);
-  tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
+  rb::math::tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
   tcp_pose_.a *= RAD2DEG;                   // change radian to degree
   tcp_pose_.b *= RAD2DEG;
   tcp_pose_.c *= RAD2DEG;
@@ -310,7 +310,7 @@ ArmPose Artic::forwardKin(const rb::math::VectorX& q, const bool update)
   tcp_pose_.x = world_tcp_tf_(0, 3);
   tcp_pose_.y = world_tcp_tf_(1, 3);
   tcp_pose_.z = world_tcp_tf_(2, 3);
-  tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
+  rb::math::tr2rpy(world_tcp_tf_, tcp_pose_.a, tcp_pose_.b, tcp_pose_.c);
   tcp_pose_.a = RAD2DEG * tcp_pose_.a;
   tcp_pose_.b = RAD2DEG * tcp_pose_.b;
   tcp_pose_.c = RAD2DEG * tcp_pose_.c;
@@ -424,7 +424,7 @@ IK_RESULT Artic::inverseKin(const rb::math::Matrix4& world_tcp_tf,
   this->tcp_pose_.x = world_tcp_tf(0, 3);
   this->tcp_pose_.y = world_tcp_tf(1, 3);
   this->tcp_pose_.z = world_tcp_tf(2, 3);
-  tr2rpy(world_tcp_tf,
+  rb::math::tr2rpy(world_tcp_tf,
       this->tcp_pose_.a,
       this->tcp_pose_.b,
       this->tcp_pose_.c);
@@ -459,10 +459,7 @@ IK_RESULT Artic::inverseKin(const double& x, const double& y, const double& z,
   // calculate Transformation matrix of Tool Center Point (TCP)  with
   // respect to world (work base) coordination system.
   Matrix4 world_tcp_tf =  Matrix4::Identity();
-  double r_deg = roll;
-  double p_deg = pitch;
-  double y_deg = yaw;
-  rpy2tr(r_deg, p_deg, y_deg, world_tcp_tf);
+  rb::math::rpy2tr(roll * DEG2RAD, pitch * DEG2RAD, yaw * DEG2RAD, world_tcp_tf);
   world_tcp_tf(0, 3) = x;
   world_tcp_tf(1, 3) = y;
   world_tcp_tf(2, 3) = z;
@@ -868,7 +865,7 @@ rb::math::VectorX Artic::getLowLimit(void) const
   jntPos.x = this->frames_[jnt](0, 3);
   jntPos.y = this->frames_[jnt](1, 3);
   jntPos.z = this->frames_[jnt](2, 3);
-  tr2rpy(this->frames_[jnt], jntPos.a, jntPos.b, jntPos.c);
+  rb::math::tr2rpy(this->frames_[jnt], jntPos.a, jntPos.b, jntPos.c);
   jntPos.a = RAD2DEG * jntPos.a;
   jntPos.b = RAD2DEG * jntPos.b;
   jntPos.c = RAD2DEG * jntPos.c;
@@ -879,76 +876,6 @@ rb::math::VectorX Artic::getLowLimit(void) const
   { // TODO: check if 0 < jnt < DOF
     return this->frames_[jnt];
   }
-
-/********************************************************************************/
-/** \brief Rotation Matrix to Roll Pitch Yaw
- * A function to get roll, pitch, yaw from rotation matrix
- * \return N/A
- */
-void Artic::tr2rpy(const Matrix4& m, double& roll_z, double& pitch_y, double& yaw_x)
-{
-  double eps = rb::math::EPSILON;     // to check if close to zero
-  if(fabs(m(0,0)) < eps && fabs(m(1,0)) < eps)
-  {
-    roll_z  = 0;
-    pitch_y = atan2(-m(2,0), m(0,0));
-    yaw_x   = atan2(-m(1,2), m(1,1));
-  }
-  else
-  {
-    roll_z  = atan2(m(1,0), m(0,0));
-    double sr = sin(roll_z);
-    double cr = cos(roll_z);
-    pitch_y = atan2(-m(2,0), cr * m(0,0) + sr * m(1,0));
-    yaw_x   = atan2(sr * m(0,2) - cr * m(1,2), cr * m(1,1) - sr * m(0,1));
-  }
-  return;
-}
-
-
-/********************************************************************************/
-/** \brief Roll Pitch Yaw to Rotation Matrix
- * A function to get roll, pitch, yaw from rotation matrix
- * \return N/A
- */
-void Artic::rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, Matrix4& tool_mat)
-{
-  Matrix4 mat_z = rotateZ(roll_z);
-  Matrix4 mat_y = rotateY(pitch_y);
-  Matrix4 mat_x = rotateX(yaw_x);
-  tool_mat = mat_z * mat_y * mat_x;
-  return;
-}
-
-
-Matrix4 Artic::rotateX(const double& deg)
-{
-  Matrix3 m33;
-  m33 = AngleAxis(deg * DEG2RAD, Vector3::UnitX());
-  Matrix4 matrix = Matrix4::Identity();
-  matrix.topLeftCorner(3, 3) << m33;
-
-  return matrix;
-}
-
-
-Matrix4 Artic::rotateY(const double& deg)
-{
-  Matrix3 m33;
-  m33 = AngleAxis(deg * DEG2RAD, Vector3::UnitY());
-  Matrix4 matrix = Matrix4::Identity();
-  matrix.topLeftCorner(3,3) << m33;
-  return matrix;
-}
-
-Matrix4 Artic::rotateZ(const double& deg)
-{
-  Matrix3 m33;
-  m33 = AngleAxis(deg * DEG2RAD, Vector3::UnitZ());
-  Matrix4 matrix = Matrix4::Identity();
-  matrix.topLeftCorner(3,3) << m33;
-  return matrix;
-}
 
 }   // namespace kin
 }   // namespace rb

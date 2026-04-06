@@ -216,14 +216,6 @@ protected:
   std::string manufactor_;                    //!< the name of manufactor of the robot
   std::string model_;                         //!< the model of the robot named by its manufactor
 
-private:
-  // private functions
-  // TODO: could move functions for matrix manipulating, such as rpy2tr & tr2rpy to math.h
-  void tr2rpy(const rb::math::Matrix4& m, double& roll_z, double& pitch_y, double& yaw_x) const;
-  void rpy2tr(double& roll_z, double& pitch_y, double& yaw_x, rb::math::Matrix4& tool_mat);
-  rb::math::Matrix4 rotateX(const double& deg);
-  rb::math::Matrix4 rotateY(const double& deg);
-  rb::math::Matrix4 rotateZ(const double& deg);
 };
 
 }       // namespace kin

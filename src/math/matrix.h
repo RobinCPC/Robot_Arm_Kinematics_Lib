@@ -8,6 +8,7 @@
 #define RB_MATRIX_H_
 #include "unit.h"
 
+#include <cmath>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
@@ -54,6 +55,81 @@ inline Matrix4 homoTrans(const double& A, const double& alpha, const double& D, 
     st*sa, ct*sa,  ca,  ca*D,
         0,     0,   0,     1;
   return T;
+}
+
+/*!
+ * @brief Compute rotation matrix about X axis for given angle in radians.
+ */
+inline Matrix4 rotateX(const double& rad)
+{
+  Matrix3 m33;
+  m33 = AngleAxis(rad, Vector3::UnitX());
+  Matrix4 m = Matrix4::Identity();
+  m.topLeftCorner(3, 3) << m33;
+  return m;
+}
+
+/*!
+ * @brief Compute rotation matrix about Y axis for given angle in radians.
+ */
+inline Matrix4 rotateY(const double& rad)
+{
+  Matrix3 m33;
+  m33 = AngleAxis(rad, Vector3::UnitY());
+  Matrix4 m = Matrix4::Identity();
+  m.topLeftCorner(3, 3) << m33;
+  return m;
+}
+
+/*!
+ * @brief Compute rotation matrix about Z axis for given angle in radians.
+ */
+inline Matrix4 rotateZ(const double& rad)
+{
+  Matrix3 m33;
+  m33 = AngleAxis(rad, Vector3::UnitZ());
+  Matrix4 m = Matrix4::Identity();
+  m.topLeftCorner(3, 3) << m33;
+  return m;
+}
+
+/*!
+ * @brief Extract Roll-Pitch-Yaw (Z-Y-X Euler) angles in radians from a
+ *        homogeneous transformation matrix.
+ * @param m         Input 4x4 HT matrix.
+ * @param roll_z    Output roll  (rotation about Z) in radians.
+ * @param pitch_y   Output pitch (rotation about Y) in radians.
+ * @param yaw_x     Output yaw   (rotation about X) in radians.
+ */
+inline void tr2rpy(const Matrix4& m, double& roll_z, double& pitch_y, double& yaw_x)
+{
+  if (fabs(m(0,0)) < EPSILON && fabs(m(1,0)) < EPSILON)
+  {
+    roll_z  = 0;
+    pitch_y = atan2(-m(2,0), m(0,0));
+    yaw_x   = atan2(-m(1,2), m(1,1));
+  }
+  else
+  {
+    roll_z  = atan2(m(1,0), m(0,0));
+    double sr = sin(roll_z);
+    double cr = cos(roll_z);
+    pitch_y = atan2(-m(2,0), cr * m(0,0) + sr * m(1,0));
+    yaw_x   = atan2(sr * m(0,2) - cr * m(1,2), cr * m(1,1) - sr * m(0,1));
+  }
+}
+
+/*!
+ * @brief Build a homogeneous transformation matrix from Roll-Pitch-Yaw
+ *        angles (Z-Y-X Euler) given in radians.
+ * @param roll_z    Roll  (rotation about Z) in radians.
+ * @param pitch_y   Pitch (rotation about Y) in radians.
+ * @param yaw_x     Yaw   (rotation about X) in radians.
+ * @param out       Output 4x4 HT matrix (rotation part only; translation unchanged).
+ */
+inline void rpy2tr(const double& roll_z, const double& pitch_y, const double& yaw_x, Matrix4& out)
+{
+  out = rotateZ(roll_z) * rotateY(pitch_y) * rotateX(yaw_x);
 }
 
 }   // namespace math
