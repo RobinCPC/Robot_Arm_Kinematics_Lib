@@ -39,3 +39,11 @@ endif()
 add_executable(link link_test.cpp)
 target_link_libraries(link gtest_main rbkin)
 add_test(NAME link_test COMMAND link)
+
+add_executable(kinematics_test kinematics_test.cpp)
+target_link_libraries(kinematics_test gtest_main rbkin)
+add_test(NAME kinematics_test COMMAND kinematics_test)
+
+add_executable(polynomial_test polynomial_test.cpp)
+target_link_libraries(polynomial_test gtest_main rbkin)
+add_test(NAME polynomial_test COMMAND polynomial_test)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 project(RobotArmLib)
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")

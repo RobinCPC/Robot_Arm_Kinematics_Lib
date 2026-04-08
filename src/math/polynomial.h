@@ -113,6 +113,23 @@ public:
   }
 
   /*!
+   * @brief Get the 2nd order differential value (acceleration) of polynomial f(t)
+   * at time T
+   * @param T the value of a certain time.
+   * @return  double
+   */
+  double getAcceleration(const double& T) const
+  {
+    rb::math::VectorX vecT(degree_ - 1);
+    for (int i = 0; i < vecT.size(); ++i)
+    {
+      vecT[i] = (i + 1) * (i + 2) * pow(T, i);
+    }
+    double accel = c_.tail(degree_ - 1).transpose() * vecT;
+    return accel;
+  }
+
+  /*!
    * @brief Get the degree (order) of the polynomial function.
    * @return short
    */
