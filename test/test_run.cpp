@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <algorithm>
+#include <cmath>
 
 #include "../src/kin/link.h"
 #include "../src/kin/artic.h"
@@ -25,6 +27,103 @@ struct Timer
     std::cout << "Timer took " << ns << " ns\n";
   }
 };
+
+// ===== Round-trip FK/IK test helpers =====
+
+struct RoundTripResult
+{
+  bool   ik_complete;
+  bool   pose_match;
+  double max_pos_err;   // mm
+  double max_ori_err;   // deg
+};
+
+static RoundTripResult checkRoundTrip(rb::kin::Artic& robot,
+                                       const rb::math::VectorX& q_in,
+                                       double tol_pos, double tol_ori)
+{
+  RoundTripResult r = {false, false, 0., 0.};
+
+  // Step 1: FK at the test configuration
+  rb::kin::ArmPose tcp = robot.forwardKin(q_in);
+
+  // Step 2: IK from that TCP pose
+  rb::math::VectorX joints;
+  rb::kin::ArmAxisValue all_sols;
+  rb::kin::IK_RESULT res = robot.inverseKin(
+      tcp.x, tcp.y, tcp.z, tcp.a, tcp.b, tcp.c, joints, all_sols);
+
+  r.ik_complete = (res == rb::kin::IK_COMPLETE);
+  if (!r.ik_complete)
+    return r;
+
+  // Step 3: FK again with the best-fit IK joints
+  rb::kin::ArmPose tcp2 = robot.forwardKin(joints);
+
+  // Compare the two TCP poses
+  r.max_pos_err = std::max({std::fabs(tcp2.x - tcp.x),
+                             std::fabs(tcp2.y - tcp.y),
+                             std::fabs(tcp2.z - tcp.z)});
+  r.max_ori_err = std::max({std::fabs(tcp2.a - tcp.a),
+                             std::fabs(tcp2.b - tcp.b),
+                             std::fabs(tcp2.c - tcp.c)});
+  r.pose_match  = (r.max_pos_err <= tol_pos && r.max_ori_err <= tol_ori);
+  return r;
+}
+
+static int runRoundTripTests(rb::kin::Artic& robot)
+{
+  const double TOL_POS = 0.001;  // mm
+  const double TOL_ORI = 0.001;  // deg
+
+  struct TestCase { const char* name; rb::math::VectorX q; };
+  std::vector<TestCase> cases;
+
+  rb::math::VectorX q(6);
+
+  q << 0, 0, 0, 0, 0, 0;
+  cases.push_back({"Home (all zeros)", q});
+
+  q << 45, 0, 0, 0, 30, 0;  // J5=0 is a wrist singularity; use J5=30 to avoid it
+  cases.push_back({"J1+J5 (avoid singularity)", q});
+
+  q << 45, -90, 45, 0, 90, 0;
+  cases.push_back({"Multi-joint (existing)", q});
+
+  q << 30, -45, 60, 20, -30, 15;
+  cases.push_back({"General pose", q});
+
+  q << -60, -30, 30, -90, 45, 0;
+  cases.push_back({"Neg elbow config", q});
+
+  int pass = 0, fail = 0;
+  std::cout << "\n===== Round-trip FK/IK Tests (tol: "
+            << TOL_POS << " mm, " << TOL_ORI << " deg) =====\n";
+  std::cout << std::left
+            << std::setw(28) << "Test"
+            << std::setw(12) << "IK result"
+            << std::setw(16) << "Pos err (mm)"
+            << std::setw(16) << "Ori err (deg)"
+            << "Status\n";
+  std::cout << std::string(78, '-') << '\n';
+
+  for (size_t i = 0; i < cases.size(); ++i)
+  {
+    RoundTripResult r = checkRoundTrip(robot, cases[i].q, TOL_POS, TOL_ORI);
+    bool ok = r.ik_complete && r.pose_match;
+    if (ok) ++pass; else ++fail;
+
+    std::cout << std::left  << std::setw(28) << cases[i].name
+              << std::setw(12) << (r.ik_complete ? "COMPLETE" : "FAILED")
+              << std::fixed   << std::setprecision(6)
+              << std::setw(16) << (r.ik_complete ? r.max_pos_err : -1.)
+              << std::setw(16) << (r.ik_complete ? r.max_ori_err : -1.)
+              << (ok ? "[PASS]" : "[FAIL]") << '\n';
+  }
+  std::cout << std::string(78, '-') << '\n';
+  std::cout << "Round-trip result: " << pass << "/" << (pass + fail) << " passed\n";
+  return fail;
+}
 
 int main(void)
 {
@@ -74,6 +173,9 @@ int main(void)
 #if __cplusplus < 201103L
   delete robot;
 #endif
+
+  // ===== Round-trip FK/IK Tests =====
+  runRoundTripTests(*robot);
 
   // ===== Testing Link class =====
   std::vector<std::unique_ptr<rb::kin::Link>> links;
