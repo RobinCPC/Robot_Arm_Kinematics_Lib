@@ -50,6 +50,11 @@ add_executable(test_run
     )
 target_link_libraries(test_run rbkin)
 
+# minimal usage example
+add_executable(basic_fk_ik examples/basic_fk_ik.cpp)
+target_include_directories(basic_fk_ik PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(basic_fk_ik rbkin)
+
 # install test run in ./bin
 install(TARGETS test_run DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(TARGETS rbkin DESTINATION ${CMAKE_SOURCE_DIR}/bin)
