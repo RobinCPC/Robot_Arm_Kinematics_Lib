@@ -35,7 +35,7 @@ LIBS =
 KIN_DIR = ../../src
 SOURCES += application.cpp
 SOURCES += $(KIN_DIR)/kin/link.cpp $(KIN_DIR)/kin/kinematic_chain.cpp $(KIN_DIR)/kin/artic.cpp
-CXXFLAGS += -I${KIN_DIR} -I/usr/local/include/eigen3
+CXXFLAGS += -I${KIN_DIR} -I/usr/include/eigen3
 #LIBS += -L../../build -lrbkin
 
 ##---------------------------------------------------------------------

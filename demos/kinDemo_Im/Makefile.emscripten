@@ -35,7 +35,7 @@ EMS =
 KIN_DIR = ../../src
 SOURCES += application.cpp
 SOURCES += $(KIN_DIR)/kin/link.cpp $(KIN_DIR)/kin/kinematic_chain.cpp $(KIN_DIR)/kin/artic.cpp
-CXXFLAGS += -I${KIN_DIR} -I/usr/local/include/eigen3
+CXXFLAGS += -I${KIN_DIR} -I/usr/include/eigen3
 
 ##---------------------------------------------------------------------
 ## EMSCRIPTEN OPTIONS
@@ -67,7 +67,7 @@ endif
 ##---------------------------------------------------------------------
 
 CPPFLAGS += -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends
-#CPPFLAGS += -g
+CPPFLAGS += -g
 CPPFLAGS += -Wall -Wformat -Os $(EMS)
 # LDFLAGS += --shell-file ../libs/emscripten/shell_minimal.html
 LDFLAGS += $(EMS)
